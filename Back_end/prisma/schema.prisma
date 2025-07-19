@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  STUDENT
+}
+
+model User {
+  id             String   @id @default(uuid())
+  firstName      String
+  lastName       String
+  userName       String   @unique
+  email          String   @unique
+  password       String
+  profilePicture String?
+  role           Role     @default(STUDENT)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdBy      String?
+  creator        User?    @relation("UserCreator", fields: [createdBy], references: [id])
+  createdUsers   User[]   @relation("UserCreator")
+
+  enrollments  Enrollment[]
+  progress     Progress[]
+  ratings      Rating[]
+  testimonials Testimonial[]
+}
+
+model CourseCategory {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  courses Course[]
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String
+  thumbnail   String?
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  categoryId  String
+  adminId     String
+
+  category     CourseCategory @relation(fields: [categoryId], references: [id])
+  enrollments  Enrollment[]
+  quizzes      Quiz[]
+  chapters     Chapter[]
+  ratings      Rating[]
+  testimonials Testimonial[]
+}
+
+model Chapter {
+  id        String   @id @default(uuid())
+  title     String
+  order     Int
+  courseId  String
+  createdAt DateTime @default(now())
+
+  course      Course       @relation(fields: [courseId], references: [id])
+  subChapters SubChapter[]
+}
+
+model SubChapter {
+  id          String   @id @default(uuid())
+  title       String
+  videoUrl    String
+  videoLength Int
+  order       Int
+  chapterId   String
+  createdAt   DateTime @default(now())
+
+  chapter   Chapter    @relation(fields: [chapterId], references: [id])
+  progress  Progress[]
+  resources Resource[]
+}
+
+model Resource {
+  id           String   @id @default(uuid())
+  title        String
+  fileUrl      String
+  fileType     String
+  subChapterId String
+  createdAt    DateTime @default(now())
+
+  subChapter SubChapter @relation(fields: [subChapterId], references: [id])
+}
+
+model Enrollment {
+  id         String   @id @default(uuid())
+  userId     String
+  courseId   String
+  enrolledAt DateTime @default(now())
+  completed  Boolean  @default(false)
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+}
+
+model Quiz {
+  id        String   @id @default(uuid())
+  title     String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  course    Course     @relation(fields: [courseId], references: [id])
+  questions Question[]
+}
+
+model Question {
+  id     String @id @default(uuid())
+  text   String
+  quizId String
+
+  quiz    Quiz     @relation(fields: [quizId], references: [id])
+  options Option[]
+}
+
+model Option {
+  id         String  @id @default(uuid())
+  text       String
+  isCorrect  Boolean @default(false)
+  questionId String
+
+  question Question @relation(fields: [questionId], references: [id])
+}
+
+model Progress {
+  id           String   @id @default(uuid())
+  userId       String
+  subChapterId String
+  watchedAt    DateTime @default(now())
+  completed    Boolean  @default(true)
+
+  user       User       @relation(fields: [userId], references: [id])
+  subChapter SubChapter @relation(fields: [subChapterId], references: [id])
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  message   String
+  approved  Boolean  @default(false)
+  userId    String
+  courseId  String?
+  createdAt DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id])
+  course Course? @relation(fields: [courseId], references: [id])
+}

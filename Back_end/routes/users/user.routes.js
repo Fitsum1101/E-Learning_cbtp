@@ -2,17 +2,28 @@ const router = require("express").Router();
 const { body } = require("express-validator");
 
 const userController = require("../../controller/users/users.controller");
-const upload = require("../../middleware/upload");
+const fileUpload = require("../../middleware/upload");
 
 router.post(
   "/users",
-  upload.single("profilePicture"),
+  fileUpload("images").single("profilePicture"),
   [
-    body("name")
+    body("userName")
       .notEmpty()
       .withMessage("username is required.")
       .isLength({ min: 2 })
       .withMessage("username must be at least 2 characters."),
+    ,
+    body("firstName")
+      .notEmpty()
+      .withMessage("firstName is required.")
+      .isLength({ min: 2 })
+      .withMessage("firstName must be at least 2 characters."),
+    body("lastName")
+      .notEmpty()
+      .withMessage("lastName is required.")
+      .isLength({ min: 2 })
+      .withMessage("lastName must be at least 2 characters."),
     ,
     body("email")
       .notEmpty()
@@ -31,7 +42,6 @@ router.post(
 
 router.put(
   "/users/:id",
-  upload.single("profilePicture"),
   [
     body("name")
       .optional()
@@ -48,6 +58,7 @@ router.put(
       .isLength({ min: 6 })
       .withMessage("Password must be at least 6 characters."),
   ],
+  fileUpload("images/profile").single("profilePicture"),
   userController.putUser
 );
 

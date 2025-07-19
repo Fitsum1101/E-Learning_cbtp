@@ -1,37 +1,52 @@
 const bcrypt = require("bcrypt");
 
 const prisma = require("../../config/db");
+const { deleteFile } = require("../../util/removeFile");
+const path = require("path");
 
 exports.postUser = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { firstName, lastName, userName, email, password } = JSON.parse(
+      req.body.user
+    );
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    const existingFields = {};
+
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { userName }],
+      },
     });
-    if (existingUser) {
-      return res
-        .status(409)
-        .json({ message: "User with this email already exists." });
+
+    if (user) {
+      if (user.email === email) {
+        existingFields.email = "Email already exists";
+      }
+
+      if (user.userName === userName) {
+        existingFields.userName = "Username already exists";
+      }
+    }
+
+    // Send response if duplicates exist
+    if (Object.keys(existingFields).length > 0) {
+      res.status(400).json({
+        message: "Validation failed",
+        errors: existingFields,
+      });
+      return deleteFile(path.join(require.main.path, req.file.path));
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const profilePicturePath = req.file ? req.file.path : null;
-
     const newUser = await prisma.user.create({
       data: {
-        name,
+        userName,
+        firstName,
+        lastName,
         email,
         password: hashedPassword,
-        // profilePicture: profilePicturePath,
         profilePicture: profilePicturePath,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
       },
     });
 
