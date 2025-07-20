@@ -3,14 +3,13 @@ const bcrypt = require("bcrypt");
 const prisma = require("../../config/db");
 const { deleteFile } = require("../../util/removeFile");
 const path = require("path");
+const validate = require("../../util/validate.util");
 
 exports.postUser = async (req, res, next) => {
   try {
-    const { firstName, lastName, userName, email, password } = JSON.parse(
-      req.body.user
-    );
+    const { firstName, lastName, userName, email, password } = req.body;
 
-    const existingFields = {};
+    const existingFields = validate(req);
 
     const user = await prisma.user.findFirst({
       where: {
@@ -19,16 +18,15 @@ exports.postUser = async (req, res, next) => {
     });
 
     if (user) {
-      if (user.email === email) {
+      if (!existingFields.email && user.email === email) {
         existingFields.email = "Email already exists";
       }
 
-      if (user.userName === userName) {
+      if (!existingFields.userName && user.userName === userName) {
         existingFields.userName = "Username already exists";
       }
     }
 
-    // Send response if duplicates exist
     if (Object.keys(existingFields).length > 0) {
       res.status(400).json({
         message: "Validation failed",
@@ -63,43 +61,61 @@ exports.postUser = async (req, res, next) => {
 exports.putUser = async (req, res, next) => {
   try {
     const userId = req.params.id;
-    const { name, email } = req.body;
+    const { firstName, lastName, userName, password } = req.body;
+
+    const existingFields = validate(req);
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
+    const isUserNameExists = await prisma.user.findUnique({
+      where: {
+        userName,
+      },
+      select: {
+        userName: true,
+        id: true,
+      },
+    });
+
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    if (email && email !== user.email) {
-      const existingEmailUser = await prisma.user.findUnique({
-        where: { email },
+      return res.status(400).json({
+        success: "false",
+        message: "user with this id does not exists",
+        errors: existingFields,
       });
-      if (existingEmailUser) {
-        return res
-          .status(409)
-          .json({ message: "Another user with this email already exists." });
-      }
+    }
+    if (
+      !existingFields.userName &&
+      isUserNameExists &&
+      user.id !== isUserNameExists.id
+    ) {
+      existingFields.userName = "Username already exists";
+    }
+    const isFileUpoaded = req.file;
+
+    if (Object.keys(existingFields).length > 0) {
+      res.status(400).json({
+        success: "false",
+        message: "Validation failed",
+        errors: existingFields,
+      });
+      if (isFileUpoaded)
+        deleteFile(path.join(require.main.path, req.file.path));
+      return;
     }
 
-    const profilePicturePath = req.file ? req.file.path : undefined;
-
-    const updateData = {
-      ...(name && { name }),
-      ...(email && { email }),
-      ...(profilePicturePath && { profilePicture: profilePicturePath }),
-    };
+    const profilePicturePath = isFileUpoaded
+      ? req.file.path
+      : user.profilePicture;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-        profilePicture: true,
+      data: {
+        firstName,
+        lastName,
+        userName,
+        password: hashedPassword,
+        profilePicture: profilePicturePath,
       },
     });
 
@@ -108,6 +124,9 @@ exports.putUser = async (req, res, next) => {
       message: "User updated successfully.",
       user: updatedUser,
     });
+
+    if (user.profilePicture)
+      deleteFile(path.join(require.main.path, user.profilePicture));
   } catch (error) {
     next(error);
   }
@@ -121,7 +140,9 @@ exports.getUser = async (req, res, next) => {
       where: { id },
       select: {
         id: true,
-        name: true,
+        userName: true,
+        lastName: true,
+        firstName: true,
         email: true,
         role: true,
         createdAt: true,
@@ -158,6 +179,8 @@ exports.deleteUser = async (req, res, next) => {
       success: true,
       message: "User deleted successfully.",
     });
+    if (user.profilePicture)
+      deleteFile(path.join(require.main.path, user.profilePicture));
   } catch (error) {
     next(error);
   }
