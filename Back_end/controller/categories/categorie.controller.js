@@ -1,6 +1,36 @@
+const prisma = require("../../config/db");
+
+const validate = require("../../util/validate.util");
+const slugify = require("../../util/slugfy");
+
 exports.createCourseCategory = async (req, res, next) => {
   try {
-    const { name, slug } = req.body;
+    const existingFields = validate(req);
+
+    if (Object.keys(existingFields).length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: existingFields,
+      });
+    }
+
+    const { name } = req.body;
+
+    const slug = slugify(name);
+
+    const isCatagoryExists = await prisma.courseCategory.findUnique({
+      where: {
+        slug,
+      },
+    });
+
+    if (isCatagoryExists) {
+      res.status(400).json({
+        success: false,
+        errors: "catagory aleady exists",
+      });
+    }
 
     const category = await prisma.courseCategory.create({
       data: {
@@ -9,7 +39,10 @@ exports.createCourseCategory = async (req, res, next) => {
       },
     });
 
-    res.status(201).json(category);
+    res.status(201).json({
+      success: true,
+      category,
+    });
   } catch (err) {
     next(err);
   }
@@ -18,8 +51,46 @@ exports.createCourseCategory = async (req, res, next) => {
 exports.updateCourseCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, slug } = req.body;
 
+    const existingId = await prisma.courseCategory.findFirst({
+      where: {
+        id,
+      },
+    });
+
+    if (!existingId || !id) {
+      return res.status(400).json({
+        success: false,
+        message: "Category with this id not exists.",
+      });
+    }
+
+    const existingFields = validate(req);
+
+    if (Object.keys(existingFields).length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: existingFields,
+      });
+    }
+
+    const { name } = req.body;
+
+    const slug = slugify(name);
+
+    const existing = await prisma.courseCategory.findFirst({
+      where: {
+        slug,
+        NOT: { id },
+      },
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        message: "Category with this name  already exists.",
+      });
+    }
     const updated = await prisma.courseCategory.update({
       where: { id },
       data: {
@@ -28,7 +99,10 @@ exports.updateCourseCategory = async (req, res, next) => {
       },
     });
 
-    res.json(updated);
+    res.json({
+      success: true,
+      updated,
+    });
   } catch (err) {
     next(err);
   }
@@ -37,10 +111,25 @@ exports.updateCourseCategory = async (req, res, next) => {
 exports.deleteCourseCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const existing = await prisma.courseCategory.findFirst({
+      where: {
+        id,
+      },
+    });
+
+    if (!existing) {
+      return res.status(400).json({
+        success: false,
+        message: "Category with this id not exists.",
+      });
+    }
 
     await prisma.courseCategory.delete({ where: { id } });
 
-    res.status(204).send();
+    res.status(200).send({
+      success: true,
+      message: "catagory deleted successfuly",
+    });
   } catch (err) {
     next(err);
   }
@@ -49,11 +138,12 @@ exports.deleteCourseCategory = async (req, res, next) => {
 exports.getAllCourseCategories = async (req, res, next) => {
   try {
     const categories = await prisma.courseCategory.findMany({
-      include: { courses: true },
       orderBy: { createdAt: "desc" },
     });
-
-    res.json(categories);
+    res.status(200).send({
+      success: true,
+      message: categories,
+    });
   } catch (err) {
     next(err);
   }
