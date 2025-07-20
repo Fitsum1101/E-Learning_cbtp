@@ -2,8 +2,6 @@ const multer = require("multer");
 const path = require("path");
 const createFolder = require("../util/foldecreate");
 
-// Configure storage
-
 const fileUploadHandler = (folderName) => {
   createFolder(folderName);
   const storage = multer.diskStorage({
