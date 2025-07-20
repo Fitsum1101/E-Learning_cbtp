@@ -29,6 +29,7 @@ exports.postUser = async (req, res, next) => {
 
     if (Object.keys(existingFields).length > 0) {
       res.status(400).json({
+        success: false,
         message: "Validation failed",
         errors: existingFields,
       });
