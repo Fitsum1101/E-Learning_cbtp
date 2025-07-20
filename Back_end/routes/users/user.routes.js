@@ -7,21 +7,19 @@ const fileUpload = require("../../middleware/upload");
 router.post(
   "/users",
   fileUpload("images").single("profilePicture"),
+  (req, res, next) => {
+    req.body = req.body.user ? JSON.parse(req.body.user) : req.body;
+    next();
+  },
   [
     body("userName")
-      .notEmpty()
-      .withMessage("username is required.")
       .isLength({ min: 2 })
       .withMessage("username must be at least 2 characters."),
     ,
     body("firstName")
-      .notEmpty()
-      .withMessage("firstName is required.")
       .isLength({ min: 2 })
       .withMessage("firstName must be at least 2 characters."),
     body("lastName")
-      .notEmpty()
-      .withMessage("lastName is required.")
       .isLength({ min: 2 })
       .withMessage("lastName must be at least 2 characters."),
     ,
@@ -30,7 +28,6 @@ router.post(
       .withMessage("Email is required.")
       .isEmail()
       .withMessage("Please provide a valid email."),
-
     body("password")
       .notEmpty()
       .withMessage("Password is required.")
@@ -42,23 +39,29 @@ router.post(
 
 router.put(
   "/users/:id",
+  fileUpload("images").single("profilePicture"),
+  (req, res, next) => {
+    console.log(req.body.user);
+    req.body = req.body.user ? JSON.parse(req.body.user) : req.body;
+    next();
+  },
   [
-    body("name")
-      .optional()
+    body("userName")
       .isLength({ min: 2 })
-      .withMessage("Name must be at least 2 characters."),
-
-    body("email")
-      .optional()
-      .isEmail()
-      .withMessage("Please provide a valid email."),
-
+      .withMessage("username must be at least 2 characters."),
+    ,
+    body("firstName")
+      .isLength({ min: 2 })
+      .withMessage("firstName must be at least 2 characters."),
+    body("lastName")
+      .isLength({ min: 2 })
+      .withMessage("lastName must be at least 2 characters."),
+    ,
     body("password")
       .optional()
       .isLength({ min: 6 })
       .withMessage("Password must be at least 6 characters."),
   ],
-  fileUpload("images/profile").single("profilePicture"),
   userController.putUser
 );
 
