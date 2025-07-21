@@ -1,17 +1,50 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const db = require("../../config/db");
+const slugify = require("../../util/slugfy");
+const validate = require("../../util/validate.util");
+const { deleteFile } = require("../../util/removeFile");
+const path = require("path");
+
+const makePath = (filePath) => path.join(require.main.path, filePath);
 
 exports.createCourse = async (req, res, next) => {
   try {
-    const { title, description, categoryId, adminId } = req.body;
+    const existingFields = validate(req);
+    const isThumbnailExists = typeof req.file === "object";
 
-    const thumbnail = req.file.path;
-    const slug = title
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9\-]/g, "");
+    if (Object.keys(existingFields).length > 0) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: existingFields,
+      });
+      isThumbnailExists && deleteFile(makePath(req.file.path));
 
-    const course = await prisma.course.create({
+      return;
+    }
+
+    const { title, description, categoryId } = req.body;
+
+    const slug = slugify(title);
+    const adminId = "0466b076-adcf-47fa-8dc2-6efeed9d5252";
+    const thumbnail = isThumbnailExists && req.file.path;
+
+    const isCourseExists = await db.course.findUnique({
+      where: {
+        slug,
+      },
+    });
+
+    if (isCourseExists) {
+      res.status(400).json({
+        sucess: false,
+        message: "vaidation failed",
+        error: { title: "course with this name aleady exists" },
+      });
+      isThumbnailExists && deleteFile(makePath(req.file.path));
+      return;
+    }
+
+    const course = await db.course.create({
       data: {
         title,
         slug,
@@ -22,7 +55,11 @@ exports.createCourse = async (req, res, next) => {
       },
     });
 
-    res.status(201).json(course);
+    res.status(201).json({
+      sucess: true,
+      message: "course created successfuly",
+      course,
+    });
   } catch (err) {
     next(err);
   }
@@ -30,23 +67,78 @@ exports.createCourse = async (req, res, next) => {
 
 exports.updateCourse = async (req, res, next) => {
   try {
+    const existingFields = validate(req);
+    const isThumbnailExists = typeof req.file === "object";
+
+    if (Object.keys(existingFields).length > 0) {
+      res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: existingFields,
+      });
+      isThumbnailExists && deleteFile(makePath(req.file.path));
+
+      return;
+    }
+
     const { id } = req.params;
     const { title, description, categoryId, published } = req.body;
-    const thumbnail = req.file.path;
 
-    const updated = await prisma.course.update({
+    const thumbnail = isThumbnailExists ? req.file.path : course.thumbnail;
+
+    const slug = slugify(title);
+
+    const course = await db.course.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!course) {
+      res.status(400).json({
+        sucess: false,
+        message: "course not found",
+      });
+
+      isThumbnailExists && deleteFile(makePath(req.file.path));
+      return;
+    }
+
+    const isSlugExists = await db.course.findUnique({
+      where: {
+        slug,
+        NOT: { id },
+      },
+    });
+
+    if (isSlugExists) {
+      res.status(400).json({
+        sucess: false,
+        message: "course with this name aleady exists",
+      });
+      isThumbnailExists && deleteFile(makePath(req.file.path));
+      return;
+    }
+
+    const updated = await db.course.update({
       where: { id },
       data: {
         title,
         description,
         thumbnail,
         categoryId,
-        published,
+        published:
+          course.published !== published ? published : course.published,
         updatedAt: new Date(),
       },
     });
 
-    res.json(updated);
+    res.json({
+      sucess: false,
+      message: "course updated successfuly",
+      updated,
+    });
+    if (isThumbnailExists) deleteFile(course.thumbnail);
   } catch (err) {
     next(err);
   }
@@ -56,7 +148,20 @@ exports.deleteCourse = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    await prisma.course.delete({ where: { id } });
+    const isCourseExists = await db.course.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!isCourseExists) {
+      res.status(400).json({
+        sucess: false,
+        message: "course not found",
+      });
+    }
+
+    await db.course.delete({ where: { id } });
 
     res.status(204).send();
   } catch (err) {
@@ -66,7 +171,7 @@ exports.deleteCourse = async (req, res, next) => {
 
 exports.getAllCourses = async (req, res, next) => {
   try {
-    const courses = await prisma.course.findMany({
+    const courses = await db.course.findMany({
       include: {
         category: true,
         ratings: true,
@@ -83,7 +188,20 @@ exports.getCourseBySlug = async (req, res, next) => {
   try {
     const { slug } = req.params;
 
-    const course = await prisma.course.findUnique({
+    const isSlugExists = await db.course.findUnique({
+      where: {
+        slug,
+      },
+    });
+
+    if (!isSlugExists) {
+      res.status(400).json({
+        sucess: false,
+        message: "course not aleady exists",
+      });
+    }
+
+    const course = await db.course.findUnique({
       where: { slug },
       include: {
         category: true,
