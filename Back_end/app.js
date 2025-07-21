@@ -3,18 +3,16 @@ const bodyParser = require("body-parser");
 
 const userRoutes = require("./routes/users/user.routes");
 const catagoryRoutes = require("./routes/categories/category.routes");
+const courseRoutes = require("./routes/courses/course.routes");
 
 const app = express();
-
-app.get("/", (req, res) => {
-  res.send("Hello from Express!");
-});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api", userRoutes);
 app.use("/api", catagoryRoutes);
+app.use("/api", courseRoutes);
 
 app.use((err, req, res, next) => {
   console.error("from express error handler", err.message);

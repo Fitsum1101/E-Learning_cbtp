@@ -1,3 +1,3 @@
 const { PrismaClient } = require("../generated/prisma");
-
-module.exports = new PrismaClient();
+const db = new PrismaClient();
+module.exports = db;
