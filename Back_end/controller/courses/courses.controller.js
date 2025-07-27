@@ -3,6 +3,7 @@ const slugify = require("../../util/slugfy");
 const validate = require("../../util/validate.util");
 const { deleteFile } = require("../../util/removeFile");
 const path = require("path");
+const { json } = require("body-parser");
 
 const makePath = (filePath) => path.join(require.main.path, filePath);
 
@@ -25,8 +26,8 @@ exports.createCourse = async (req, res, next) => {
     const { title, description, categoryId } = req.body;
 
     const slug = slugify(title);
-    const adminId = "0466b076-adcf-47fa-8dc2-6efeed9d5252";
-    const thumbnail = isThumbnailExists && req.file.path;
+    const adminId = "4195526e-b088-4b0a-b5ce-92f7267e5bfb";
+    const thumbnail = isThumbnailExists ? req.file.path : undefined;
 
     const isCourseExists = await db.course.findUnique({
       where: {

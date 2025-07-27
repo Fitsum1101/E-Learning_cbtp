@@ -1,21 +1,19 @@
 const db = require("../../config/db");
+const validate = require("../../util/validate.util");
 
 exports.createChapter = async (req, res, next) => {
   try {
-    const { title, order, courseId } = req.body;
+    const existingFields = validate(req);
 
-    const isTitleExists = await db.chapter.findFirst({
-      where: {
-        title,
-      },
-    });
-
-    if (isTitleExists) {
+    if (Object.keys(existingFields).length > 0) {
       return res.status(400).json({
         success: false,
-        msg: "chapter title aleady exists",
+        message: "Validation failed",
+        errors: existingFields,
       });
     }
+
+    const { title, order, courseId } = req.body;
 
     const chapter = await db.chapter.create({
       data: {
@@ -38,32 +36,27 @@ exports.createChapter = async (req, res, next) => {
 exports.updateChapter = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { title, order } = req.body;
 
     const isChapterExists = await db.chapter.findUnique({
       where: { id },
     });
 
     if (!isChapterExists) {
+      return res.status(404).json({
+        error: "Chapter not found",
+        id,
+      });
+    }
+    const existingFields = validate(req);
+    if (Object.keys(existingFields).length > 0) {
       return res.status(400).json({
         success: false,
-        msg: "chapter not found",
+        message: "Validation failed",
+        errors: existingFields,
       });
     }
 
-    const isTitleExists = await db.chapter.findFirst({
-      where: {
-        title,
-        NOT: [id],
-      },
-    });
-
-    if (isTitleExists) {
-      return res.status(400).json({
-        success: false,
-        msg: "chapter title aleady exists",
-      });
-    }
+    const { title, order } = req.body;
 
     const updated = await db.chapter.update({
       where: { id },

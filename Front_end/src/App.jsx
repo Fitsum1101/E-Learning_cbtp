@@ -1,12 +1,17 @@
 import React from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Dashboard from "./pages/dashboard/dashboard";
+import DashboardLayout from "./components/layouts/DashboardLayout";
 
-function App() {
-  return (
-    <div className="w-2xl mx-auto bg-yellow-950 mt-10 ring-2 ring-amber-400">
-      <h1>Hello, Vite + React!</h1>
-      <p>This is your restored App component.</p>
-    </div>
-  );
-}
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <DashboardLayout />,
+  },
+]);
+
+const App = () => {
+  return <RouterProvider router={router} />;
+};
 
 export default App;

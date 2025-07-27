@@ -9,8 +9,10 @@ const fileUploadHandler = (folderName, fileTypeCol) => {
       cb(null, folderName);
     },
     filename: function (req, file, cb) {
-      if (!fileTypeCol.incudes(file.mimetype.split("/")[1]))
-        return cb(null, false);
+      const ext = file.mimetype.split("/")[1];
+      if (!fileTypeCol.includes(ext)) {
+        return cb(new Error("file type not allowed"), false);
+      }
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
       cb(null, uniqueSuffix + path.extname(file.originalname));
     },

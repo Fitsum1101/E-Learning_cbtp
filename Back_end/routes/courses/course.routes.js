@@ -36,19 +36,16 @@ const courseValidationRules = [
 router.post(
   "/course",
   fileUploadHandler("images").single("courseImage"),
-  (req, res, next) => {
-    req.body = req.body && JSON.parse(req.body.course);
-    next();
-  },
   courseValidationRules,
   courseController.createCourse
 );
 
 router.put(
   "/course/:id",
-  fileUploadHandler("images").single("courseImage"),
+  fileUploadHandler("images", ["jpg", "png", "jpeg"]).single("courseImage"),
   (req, res, next) => {
-    req.body = req.body && JSON.parse(req.body.course);
+    console.log(req.body);
+    req.body = req.body && req.body.course && JSON.parse(req.body.course);
     next();
   },
   courseValidationRules,

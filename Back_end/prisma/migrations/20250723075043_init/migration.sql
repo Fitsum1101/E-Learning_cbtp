@@ -5,9 +5,9 @@ CREATE TABLE `User` (
     `lastName` VARCHAR(191) NOT NULL,
     `userName` VARCHAR(191) NOT NULL,
     `email` VARCHAR(191) NOT NULL,
-    `password` VARCHAR(191) NOT NULL,
     `profilePicture` VARCHAR(191) NULL,
-    `role` ENUM('SUPER_ADMIN', 'ADMIN', 'STUDENT') NOT NULL DEFAULT 'STUDENT',
+    `password` VARCHAR(191) NOT NULL,
+    `role` ENUM('STUDENT', 'ADMIN', 'SUPER_ADMIN') NOT NULL DEFAULT 'STUDENT',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `createdBy` VARCHAR(191) NULL,
@@ -22,7 +22,7 @@ CREATE TABLE `CourseCategory` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `slug` VARCHAR(191) NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `creaedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `CourseCategory_name_key`(`name`),
     UNIQUE INDEX `CourseCategory_slug_key`(`slug`),
@@ -61,8 +61,7 @@ CREATE TABLE `Chapter` (
 CREATE TABLE `SubChapter` (
     `id` VARCHAR(191) NOT NULL,
     `title` VARCHAR(191) NOT NULL,
-    `videoUrl` VARCHAR(191) NOT NULL,
-    `videoLength` INTEGER NOT NULL,
+    `fileUrl` VARCHAR(191) NOT NULL,
     `order` INTEGER NOT NULL,
     `chapterId` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -73,7 +72,6 @@ CREATE TABLE `SubChapter` (
 -- CreateTable
 CREATE TABLE `Resource` (
     `id` VARCHAR(191) NOT NULL,
-    `title` VARCHAR(191) NOT NULL,
     `fileUrl` VARCHAR(191) NOT NULL,
     `fileType` VARCHAR(191) NOT NULL,
     `subChapterId` VARCHAR(191) NOT NULL,
