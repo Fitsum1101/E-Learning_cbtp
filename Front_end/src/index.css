@@ -1,1 +1,67 @@
 @import "tailwindcss";
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    position: absolute;
+    z-index: 10;
+  }
+  .sidebar.active {
+    transform: translateX(0);
+  }
+}
+.top-course-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-left: 4px solid #0ea5e9;
+}
+
+.file-upload-input {
+  opacity: 1;
+  /* position: absolute; */
+  width: 1px;
+  height: 1px;
+}
+.file-upload-label {
+  cursor: pointer;
+}
+
+.file-upload-input:focus + .file-upload-label {
+  outline: 2px solid #3b82f6;
+}
+
+.chapter-item {
+  border-left: 3px solid #e2e8f0;
+}
+.chapter-item:hover {
+  border-left-color: #6366f1;
+}
+.subchapter-item {
+  border-left: 3px solid #cbd5e1;
+  margin-left: 1.5rem;
+}
+.subchapter-item:hover {
+  border-left-color: #818cf8;
+}
+
+.modal-content-fade-in {
+  opacity: 0;
+  transform: scale(0);
+  animation: modal-fade-in 0.3s ease-out forwards;
+  transform-origin: center;
+}
+.modal-content-fade-out {
+  animation: modal-fade-out 0.1s 0.5s ease-out forwards;
+  transform-origin: center;
+}
+
+@keyframes modal-fade-in {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes modal-fade-out {
+  to {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
