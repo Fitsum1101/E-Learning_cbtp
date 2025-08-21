@@ -30,16 +30,9 @@ const validateSubChapter = [
           },
         });
       }
-
       if (isTitleExists) throw new Error("sub chapter title aleady exists");
       return true;
     }),
-
-  body("order")
-    .notEmpty()
-    .withMessage("Order is required")
-    .isInt({ min: 0 })
-    .withMessage("Order must be a non-negative integer"),
 
   body("chapterId")
     .trim()
@@ -54,15 +47,18 @@ const validateSubChapter = [
       if (!isChapterIdExists) throw new Error("course chapter not exists!");
       return true;
     }),
+
+  body("minute")
+    .trim()
+    .notEmpty()
+    .withMessage("Minute is required")
+    .isInt({ min: 0 })
+    .withMessage("Minute must be a positive integer"),
 ];
 
 router.post(
   "/sub-chapter",
-  fileUploadHandler("files", ["markdown"]).single("course_file"),
-  (req, res, next) => {
-    req.body = req.body && JSON.parse(req.body.subchapter);
-    next();
-  },
+  fileUploadHandler("files", ["octet-stream"]).single("course_file"),
   validateSubChapter,
   subChapterController.createSubChapter
 );
@@ -70,10 +66,6 @@ router.post(
 router.put(
   "/sub-chapter/:id",
   fileUploadHandler("files", ["markdown"]).single("course_file"),
-  (req, res, next) => {
-    req.body = req.body && JSON.parse(req.body.subchapter);
-    next();
-  },
   validateSubChapter,
   subChapterController.updateSubChapter
 );

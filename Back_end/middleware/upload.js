@@ -9,6 +9,7 @@ const fileUploadHandler = (folderName, fileTypeCol) => {
       cb(null, folderName);
     },
     filename: function (req, file, cb) {
+      console.log(file);
       const ext = file.mimetype.split("/")[1];
       if (!fileTypeCol.includes(ext)) {
         return cb(new Error("file type not allowed"), false);

@@ -14,7 +14,10 @@ const validateSubChapter = [
       const method = req.method;
 
       let isTitleExists = await db.chapter.findFirst({
-        where: { title },
+        where: {
+          title,
+          courseId: req.body.courseId,
+        },
       });
 
       if (method === "PUT") {
@@ -30,7 +33,7 @@ const validateSubChapter = [
           },
         });
       }
-      if (isTitleExists) throw new Error("chapter title aleady exists");
+      if (isTitleExists) throw new Error("hi fitsum kifle");
       return true;
     }),
 
@@ -47,37 +50,15 @@ const validateSubChapter = [
       if (!isCourseExists) throw new Error("course does not exists!");
       return true;
     }),
-
-  body("order")
-    .notEmpty()
-    .withMessage("Order is required")
-    .isInt({ min: 0 })
-    .withMessage("Order must be a non-negative integer")
-    .custom(async (order, { req }) => {
-      let isOrderExistss = await db.chapter.findFirst({
-        where: { courseId: req.body.courseId, order },
-      });
-      const method = req.method;
-      if (method === "PUT") {
-        isOrderExistss = await db.chapter.findFirst({
-          where: {
-            courseId: req.body.courseId,
-            NOT: [
-              {
-                id: req.params.id,
-              },
-            ],
-            order,
-          },
-        });
-      }
-      if (isOrderExistss) throw new Error(" order number aleady exists");
-      return true;
-    }),
 ];
 
 router.post("/chapter", validateSubChapter, chapterController.createChapter);
 
 router.put("/chapter/:id", validateSubChapter, chapterController.updateChapter);
+
+router.get(
+  "/course/:courseId/chapters",
+  chapterController.getChapterDataByCourseId
+);
 
 module.exports = router;

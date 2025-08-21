@@ -5,6 +5,7 @@ const usePostMutation = (url, config, dataType) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: [url],
     mutationFn: (data) =>
       api.post(url, data, {
         headers: dataType,
@@ -15,8 +16,7 @@ const usePostMutation = (url, config, dataType) => {
           queryKey: [config.invalidateQueryKey],
         });
       }
-      console.log("success");
-      config.onSuccess();
+      config.onSuccess(data.response?.data?.data);
     },
     onError: (error) => {
       console.log("error", error);

@@ -35,6 +35,7 @@ CREATE TABLE `Course` (
     `title` VARCHAR(191) NOT NULL,
     `slug` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NOT NULL,
+    `courselevel` VARCHAR(191) NOT NULL DEFAULT 'Beginner',
     `thumbnail` VARCHAR(191) NULL,
     `published` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),

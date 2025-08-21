@@ -5,10 +5,17 @@ const courseController = require("../../controller/courses/courses.controller");
 const db = require("../../config/db");
 const fileUploadHandler = require("../../middleware/upload");
 
+const courseLevels = ["beginner", "intermediate", "advanced"];
+
 const courseValidationRules = [
   body("title").trim().notEmpty().withMessage("Title is required"),
 
-  body("description").trim().notEmpty().withMessage("Description is required"),
+  body("description")
+    .trim()
+    .notEmpty()
+    .withMessage("Description is required")
+    .isLength({ min: 150, max: 200 })
+    .withMessage("description need to be  between 150 and 200 lettars"),
 
   body("published")
     .optional()
@@ -28,14 +35,22 @@ const courseValidationRules = [
       if (!existing) {
         throw new Error("Category ID does not exist");
       }
-
       return true;
     }),
+
+  body("courseLevel")
+    .trim()
+    .notEmpty()
+    .withMessage("Course level is required")
+    .isIn(courseLevels)
+    .withMessage(
+      `Course level must be one of the following: ${courseLevels.join(", ")}`
+    ),
 ];
 
 router.post(
   "/course",
-  fileUploadHandler("images").single("courseImage"),
+  fileUploadHandler("images", ["png", "jpg", "jpeg"]).single("courseImage"),
   courseValidationRules,
   courseController.createCourse
 );
@@ -56,6 +71,13 @@ router.get("/course", courseController.getAllCourses);
 
 router.get("/course/:slug", courseController.getCourseBySlug);
 
+router.get("/courses/category", courseController.getCourseByCategory);
+
 router.delete("/course/:id", courseController.deleteCourse);
+
+router.patch(
+  "/courses/:courseId/chapters/:chapterId/subchapters/reorder",
+  courseController.updateSubChapterOrder
+);
 
 module.exports = router;

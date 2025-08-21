@@ -137,12 +137,11 @@ exports.deleteCourseCategory = async (req, res, next) => {
 
 exports.getAllCourseCategories = async (req, res, next) => {
   try {
-    const categories = await prisma.courseCategory.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    const categories = await prisma.courseCategory.findMany();
     res.status(200).send({
       success: true,
-      message: categories,
+      message: "data fetched successfuly",
+      data: categories,
     });
   } catch (err) {
     next(err);

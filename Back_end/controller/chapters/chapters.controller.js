@@ -13,12 +13,16 @@ exports.createChapter = async (req, res, next) => {
       });
     }
 
-    const { title, order, courseId } = req.body;
+    const { title, courseId } = req.body;
+
+    const order = await db.chapter.count({
+      where: { courseId },
+    });
 
     const chapter = await db.chapter.create({
       data: {
         title,
-        order,
+        order: order + 1,
         courseId,
       },
     });
@@ -107,7 +111,7 @@ exports.deleteChapter = async (req, res, next) => {
     res.status(204).send({
       success: true,
       msg: "chapter deleted successfuy",
-      chapter,
+      data: chapter,
     });
   } catch (err) {
     next(err);
@@ -118,7 +122,6 @@ exports.getAllChapters = async (req, res, next) => {
   try {
     const chapters = await db.chapter.findMany({
       include: {
-        course: true,
         subChapters: true,
       },
     });
@@ -149,6 +152,28 @@ exports.getChapterById = async (req, res, next) => {
     }
 
     res.status(200).json({ success: true, chapter });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getChapterDataByCourseId = async (req, res, next) => {
+  try {
+    const { courseId } = req.params;
+    const chapters = await db.chapter.findMany({
+      where: { courseId },
+      include: {
+        subChapters: true,
+      },
+    });
+
+    if (!chapters) {
+      return res.status(404).json({
+        success: false,
+        msg: "No chapters found for this course",
+      });
+    }
+    res.status(200).json({ success: true, data: chapters });
   } catch (err) {
     next(err);
   }

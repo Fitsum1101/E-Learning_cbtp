@@ -32,7 +32,10 @@ const AddCourse = () => {
     "/api/course",
     {
       onError: (errors) => setErrors(errors),
-      onSuccess: () => navigation("/lessons"),
+      onSuccess: (data) =>
+        navigation("/lessons", {
+          state: { courseData: data },
+        }),
     },
     "multipart/form-data"
   );
@@ -262,6 +265,19 @@ const AddCourse = () => {
                 >
                   Write a concise description (150-200 characters).
                 </p>
+              </div>
+              <div className="flex items-center">
+                <label for="level" className="mr-2 text-gray-600">
+                  Level:
+                </label>
+                <select
+                  id="level"
+                  className="bg-white border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                >
+                  <option defaultChecked>Beginner</option>
+                  <option>Intermediate</option>
+                  <option>Advanced</option>
+                </select>
               </div>
             </div>
             <div className="border-t border-gray-200 px-6 py-5">

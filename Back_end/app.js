@@ -1,5 +1,9 @@
+const path = require("path");
+
 const express = require("express");
+const cors = require("cors");
 const bodyParser = require("body-parser");
+
 require("dotenv").config({ debug: true });
 
 const userRoutes = require("./routes/users/user.routes");
@@ -10,9 +14,12 @@ const subChapterRoutes = require("./routes/subchapters/subchapter.routes");
 
 const app = express();
 
+app.use(cors());
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use("/uploads", express.static(path.join(__dirname, "images")));
 app.use("/api", userRoutes);
 app.use("/api", catagoryRoutes);
 app.use("/api", courseRoutes);
