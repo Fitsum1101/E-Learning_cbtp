@@ -1,7 +1,32 @@
-import React from "react";
-import Button from "../../components/common/Button/Button";
+import { useState } from "react";
+
+import useCustomQuery from "../../hooks/Query/useCustomQuery";
+import SingleCours from "../../components/course/SingleCours";
+import Profile from "../../components/common/Avater/Profile";
 
 const Courses = () => {
+  const [selectPage, setSelectPage] = useState(1);
+
+  const [selectedCategory, setSelectedCategory] = useState({
+    slug: "All",
+    id: "All",
+  });
+
+  const { data: category } = useCustomQuery("categories", "api/categories");
+
+  const { data: courses } = useCustomQuery("courses", "/api/courses/category", {
+    categoryId: selectedCategory.id,
+    page: selectPage,
+    limit: 12,
+  });
+
+  const handlePageSelection = (page) => setSelectPage(page);
+
+  if (typeof category === "object")
+    if (category.findIndex((cat) => cat.slug === "All") === -1) {
+      category?.unshift({ id: "All", name: "All", slug: "All" });
+    }
+
   return (
     <div>
       <section className="bg-indigo-600 text-white py-12">
@@ -25,34 +50,30 @@ const Courses = () => {
           </div>
         </div>
       </section>
+      <div>
+        <Profile />
+      </div>
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-6 text-gray-800">Categories</h2>
           <div className="flex flex-wrap gap-3">
-            <button className="category-btn px-4 py-2 bg-gray-200 rounded-full hover:bg-gray-300 active">
-              All
-            </button>
-            <button className="category-btn px-4 py-2 bg-gray-200 rounded-full hover:bg-gray-300">
-              Development
-            </button>
-            <button className="category-btn px-4 py-2 bg-gray-200 rounded-full hover:bg-gray-300">
-              Business
-            </button>
-            <button className="category-btn px-4 py-2 bg-gray-200 rounded-full hover:bg-gray-300">
-              Design
-            </button>
-            <button className="category-btn px-4 py-2 bg-gray-200 rounded-full hover:bg-gray-300">
-              Marketing
-            </button>
-            <button className="category-btn px-4 py-2 bg-gray-200 rounded-full hover:bg-gray-300">
-              Photography
-            </button>
-            <button className="category-btn px-4 py-2 bg-gray-200 rounded-full hover:bg-gray-300">
-              Music
-            </button>
+            {category?.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() =>
+                  setSelectedCategory({ slug: cat.slug, id: cat.id })
+                }
+                className={`category-btn cursor-pointer  px-4 py-2  rounded-full  ${
+                  selectedCategory.slug === cat.slug
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
           </div>
         </div>
-
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="text-gray-600">
             Showing <span className="font-medium">12</span> of
@@ -89,46 +110,90 @@ const Courses = () => {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <div className="course-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition">
-            <div className="relative overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80"
-                alt="Web Development"
-                className="course-img w-full h-48 object-cover"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="font-bold truncate text-md mb-2 text-gray-800">
-                The Complete Web Development Bootcamp
-              </h3>
-              <p className="text-gray-600 text-sm mb-4">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Quas
-                libero et nihil ipsam perspiciatis ullam ea inventore esse.
-              </p>
-              <div className="flex items-center mb-2">
-                <div className="flex text-yellow-400">
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star"></i>
-                  <i className="fas fa-star-half-alt"></i>
-                </div>
-                <span className="text-gray-600 text-sm ml-2">4.7 (2,345)</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">lessons: 25</span>
-
-                <span className="text-sm text-gray-500">
-                  <i className="far fa-clock mr-1"></i> 32 hours
-                </span>
-              </div>
-              <div className="mt-4 flex justify-between items-center">
-                <Button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
-                  Enroll Now
-                </Button>
-              </div>
-            </div>
-          </div>
+          {courses?.courses?.map((cou) => (
+            <SingleCours
+              key={cou.id}
+              id={cou.id}
+              title={cou.title}
+              description={cou.description}
+              thumbnail={cou.thumbnail}
+              slug={cou.slug}
+            />
+          ))}
+        </div>
+        <div class="flex justify-center mt-12">
+          <nav class="flex items-center gap-1">
+            {courses?.pages?.startPage !== courses?.pages?.currentPage && (
+              <button
+                onClick={() => handlePageSelection(1)}
+                class="px-4 py-2 border cursor-pointer  hover:bg-gray-100"
+              >
+                1
+              </button>
+            )}
+            {courses?.pages?.prevPage - courses?.pages?.startPage > 2 && (
+              <button
+                onClick={() =>
+                  handlePageSelection(courses?.pages?.prevPage - 1)
+                }
+                class="px-4 py-2 border cursor-pointer  hover:bg-gray-100"
+              >
+                ...
+              </button>
+            )}
+            {courses?.pages?.currentPage === 4 && (
+              <button
+                onClick={() => handlePageSelection(courses?.pages?.prevPage)}
+                class="px-4 py-2 border cursor-pointer  hover:bg-gray-100"
+              >
+                {courses?.pages?.prevPage - 1}
+              </button>
+            )}
+            {courses?.pages?.prevPage !== courses?.pages?.startPage &&
+              courses?.pages?.prevPage && (
+                <button
+                  onClick={() => handlePageSelection(courses?.pages?.prevPage)}
+                  class="px-4 py-2 cursor-pointer  border hover:bg-gray-100"
+                >
+                  {courses?.pages?.prevPage}
+                </button>
+              )}
+            {courses?.pages?.currentPage && (
+              <button
+                onClick={() => handlePageSelection(courses?.pages?.currentPage)}
+                class="px-4 py-2 bg-indigo-600 border-t border-b border-r  text-white"
+              >
+                {courses?.pages?.currentPage}
+              </button>
+            )}
+            {courses?.pages?.nextPage < courses?.pages?.endPage && (
+              <button
+                onClick={() => handlePageSelection(courses?.pages?.nextPage)}
+                class="px-4 py-2 cursor-pointer  border hover:bg-gray-100"
+              >
+                {courses?.pages?.nextPage}
+              </button>
+            )}
+            {courses?.pages?.currentPage === 10 && (
+              <button
+                onClick={() => handlePageSelection(courses?.pages?.nextPage)}
+                class="px-4 cursor-pointer  py-2 border hover:bg-gray-100"
+              >
+                {courses?.pages?.nextPage + 1}
+              </button>
+            )}
+            {courses?.pages?.endPage - courses?.pages?.nextPage > 2 && (
+              <button class="px-4 py-2   border space-x-10">...</button>
+            )}
+            {courses?.pages?.currentPage !== courses?.pages?.endPage && (
+              <button
+                onClick={() => handlePageSelection(courses?.pages?.endPage)}
+                class="px-4 py-2 cursor-pointer  border hover:bg-gray-100"
+              >
+                {courses?.pages?.endPage}
+              </button>
+            )}
+          </nav>
         </div>
       </main>
     </div>

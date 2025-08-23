@@ -1,13 +1,20 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import DashboardLayout from "./components/layouts/DashboardLayout";
-import Dashboard from "./pages/dashboard/dashboard";
-import Course from "./pages/dashboard/courses";
-import AddCourse from "./pages/dashboard/AddCourse";
-import Lessons from "./pages/dashboard/Lessons";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Courses from "./pages/main/courses";
+
+import DashboardLayout from "./components/layouts/DashboardLayout";
 import MainLayout from "./components/layouts/MainLayout";
+import Dashboard from "./pages/dashboard/admin/dashboard";
+import Course from "./pages/dashboard/admin/Courses";
+import Lessons from "./pages/dashboard/admin/Lessons";
+import AddCourse from "./pages/dashboard/admin/AddCourse";
+import Courses from "./pages/main/Courses";
+import CourseDetail from "./pages/main/Course-detail";
+import ReadCourse from "./pages/main/ReadCourse";
+import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
+import BookMarks from "./pages/dashboard/student/BookMarks";
+import Tutorials from "./pages/dashboard/student/Tutorials";
+import MyCourses from "./pages/dashboard/student/MyCourses";
 
 const router = createBrowserRouter([
   {
@@ -17,25 +24,64 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Courses /> },
       {
+        path: "course/:slug",
+        children: [
+          {
+            index: true,
+            element: <CourseDetail />,
+          },
+          {
+            path: "learn",
+            element: <ReadCourse />,
+          },
+        ],
+      },
+      {
         id: "dashboard",
         path: "/dashboard",
         element: <DashboardLayout />,
         children: [
           {
-            index: true,
-            element: <Dashboard />,
+            path: "admin",
+            children: [
+              {
+                index: true,
+                element: <Dashboard />,
+              },
+              {
+                path: "courses",
+                element: <Course />,
+              },
+              {
+                path: "lessons",
+                element: <Lessons />,
+              },
+              {
+                path: "courses/add",
+                element: <AddCourse />,
+              },
+            ],
           },
           {
-            path: "courses",
-            element: <Course />,
-          },
-          {
-            path: "lessons",
-            element: <Lessons />,
-          },
-          {
-            path: "courses/add",
-            element: <AddCourse />,
+            path: "student",
+            children: [
+              {
+                index: true,
+                element: <StudentDashboard />,
+              },
+              {
+                path: "bookmarks",
+                element: <BookMarks />,
+              },
+              {
+                path: "tutorials",
+                element: <Tutorials />,
+              },
+              {
+                path: "courses",
+                element: <MyCourses />,
+              },
+            ],
           },
         ],
       },

@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import Button from "../../components/common/Button/Button";
-import Input from "../../components/common/Input/Input";
-import usePostMutation from "../../hooks/mutaion/usePostMutation";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import api from "../../services/api";
+
+import Button from "../../../components/common/Button/Button";
+import Input from "../../../components/common/Input/Input";
+import usePostMutation from "../../../hooks/mutaion/usePostMutation";
+import api from "../../../services/api";
 
 const scrollTOInputs = () =>
   window.scrollTo({
@@ -23,17 +24,19 @@ const AddCourse = () => {
     queryFn: () => api.get("api/categories"),
     select: (response) => response.data.data,
   });
+
   const errorKeys = Object.keys(errors);
 
   if (errorKeys.length > 0) {
     scrollTOInputs();
   }
+
   const { mutate } = usePostMutation(
     "/api/course",
     {
       onError: (errors) => setErrors(errors),
       onSuccess: (data) =>
-        navigation("/lessons", {
+        navigation("/", {
           state: { courseData: data },
         }),
     },
@@ -82,6 +85,8 @@ const AddCourse = () => {
     const title = data.get("course-title")?.trim();
     const description = data.get("description")?.trim();
     const categoryId = data.get("categoryId")?.trim();
+    const courseLevel = data.get("courseLevel")?.trim();
+    console.log(courseLevel);
 
     const newErrors = {};
 
@@ -116,6 +121,7 @@ const AddCourse = () => {
     apiData.append("title", title);
     apiData.append("description", description);
     apiData.append("categoryId", categoryId);
+    apiData.append("courseLevel", courseLevel);
     apiData.append("courseImage", file);
 
     mutate(apiData);
@@ -272,11 +278,14 @@ const AddCourse = () => {
                 </label>
                 <select
                   id="level"
+                  name="courseLevel"
                   className="bg-white border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
-                  <option defaultChecked>Beginner</option>
-                  <option>Intermediate</option>
-                  <option>Advanced</option>
+                  <option defaultChecked value={"beginner"}>
+                    Beginner
+                  </option>
+                  <option value={"intermediate"}>Intermediate</option>
+                  <option value={"advanced"}>Advanced</option>
                 </select>
               </div>
             </div>

@@ -1,21 +1,28 @@
-import { useQuery } from "@tanstack/react-query";
-import api from "../../services/api";
-import { useState } from "react";
-import ModalLesson from "../../ui/Modal/ModalLesson";
-import Input from "../../components/common/Input/Input";
-import Button from "../../components/common/Button/Button";
-import usePostMutation from "../../hooks/mutaion/usePostMutation";
+import { useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { useLocation } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { DndContext } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+
+import Input from "../../../components/common/Input/Input";
+import Button from "../../../components/common/Button/Button";
+import usePostMutation from "../../../hooks/mutaion/usePostMutation";
+import api from "../../../services/api";
+import ModalLesson from "../../../ui/Modal/ModalLesson";
+import Chapter from "../../../components/course/Content/Chapter";
+import SortSubChapter from "../../../components/course/Content/SortSubChapter";
 
 const Lessons = () => {
   const [selectedCourse, setSelectedCourse] = useState(undefined);
   const [showModal, setShowModal] = useState(false);
   const [showSubModal, setShowSubModal] = useState(false);
   const [chapterId, setChapterId] = useState(undefined);
-  const location = useLocation().state;
 
-  console.log({ location });
+  const queryClient = useQueryClient();
 
   const { data: courseData } = useQuery({
     queryKey: ["courses"],
@@ -27,18 +34,34 @@ const Lessons = () => {
     queryKey: ["courseLessons", { id: selectedCourse }],
     queryFn: ({ queryKey }) => {
       const { id } = queryKey[1];
-
       return api.get(`api/course/${id}/chapters`);
     },
-    enabled: () => {
-      if (selectedCourse) {
-        return true;
-      }
-
-      return false;
-    },
+    enabled: true,
     select: (response) => {
       return response.data.data;
+    },
+  });
+
+  const { mutate: updateSubChapterOrder } = useMutation({
+    mutationKey: ["updateSubChapterOrder"],
+    mutationFn: (data) =>
+      api.patch(
+        `api/courses/${data.courseId}/chapters/${data.chapterId}/subchapters/reorder`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["courseLessons", { id: selectedCourse }],
+        exact: true,
+      });
+    },
+    onError: (error) => {
+      toast.error(`Error updating sub-chapter order: ${error.message}`);
     },
   });
 
@@ -70,7 +93,7 @@ const Lessons = () => {
 `}
             >
               <option value="">-- Select a course --</option>
-              {courseData?.map((course) => (
+              {courseData?.data?.map((course) => (
                 <option value={course.id} key={course.id}>
                   {course.title}
                 </option>
@@ -79,44 +102,84 @@ const Lessons = () => {
           </div>
         </div>
       </div>
+      <div className="mb-5 flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-blue-900">Course Content</h2>
+        {lessonsData?.length > 0 && (
+          <Button
+            className="bg-indigo-500 hover:bg-indigo-600 shadow-md shadow-gray-300 font-semibold py-2 px-5 text-white text-md mt-3 "
+            onClick={() => setShowModal(!showModal)}
+          >
+            <i className="fas fa-plus mr-1"></i>
+            Add Chapter
+          </Button>
+        )}
+      </div>
       <div
         id="chapters-container"
         className="bg-white rounded-lg shadow overflow-hidden"
       >
-        <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between bg-gray-50">
-          <h3 className="text-lg font-medium text-gray-900" id="course-title">
-            Course Chapters
-          </h3>
-          {lessonsData?.length > 0 && (
-            <button
-              id="add-chapter-btn"
-              onClick={() => setShowModal(!showModal)}
-              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <i className="fas fa-plus mr-1"></i> Add Chapter
-            </button>
-          )}
-        </div>
-
         <div className="divide-y divide-gray-200">
           {lessonsData?.length > 0 && (
             <div>
               {lessonsData.map((lesson) => {
                 const { subChapters } = lesson;
                 return (
-                  <div className="chapter-item px-6 py-4 transition-all hover:bg-gray-50">
+                  <div class="border border-gray-200 rounded-lg overflow-hidden">
                     <Chapter
-                      handleSubChapterShowModel={() => {
-                        setChapterId(lesson.id);
-                        setShowSubModal(!showSubModal);
-                      }}
-                      isLessonExists={subChapters.length > 0}
+                      key={lesson.id}
                       title={lesson.title}
+                      sectionNumber={lesson.order}
+                      config={{
+                        openSubChapterModal: () => {
+                          setChapterId(lesson.id);
+                          setShowSubModal(!showSubModal);
+                        },
+                      }}
                     />
                     {subChapters.length > 0 ? (
-                      subChapters.map((data) => (
-                        <Subchapter order={data.order} title={data.title} />
-                      ))
+                      <DndContext
+                        modifiers={[restrictToVerticalAxis]}
+                        onDragEnd={(e) => {
+                          const { active, over } = e;
+                          const { id: activeId } = active;
+                          const { id: overId } = over;
+
+                          const initialOrder = {
+                            id: activeId.split(" ")[1],
+                            order: activeId.split(" ")[0],
+                          };
+
+                          const finalOrder = {
+                            id: overId.split(" ")[1],
+                            order: overId.split(" ")[0],
+                          };
+
+                          updateSubChapterOrder({
+                            chapterId: lesson.id,
+                            courseId: selectedCourse,
+                            initialOrder,
+                            finalOrder,
+                          });
+                        }}
+                      >
+                        <SortableContext
+                          items={subChapters.map(
+                            (data) => `${data.order} ${data.id}`
+                          )}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {subChapters
+                            .sort((a, b) => a.order - b.order)
+                            .map((data) => (
+                              <SortSubChapter
+                                totalMinute={data.minute}
+                                title={data.title}
+                                id={`${data.order} ${data.id}`}
+                                key={data.id}
+                              />
+                            ))}
+                        </SortableContext>
+                      </DndContext>
                     ) : (
                       <DisplayData
                         HandleOnclick={() => {
@@ -124,7 +187,7 @@ const Lessons = () => {
                           setShowSubModal(!showSubModal);
                         }}
                         modalName={"Sub-chapter"}
-                        modalNameButton={"add sub-chapters"}
+                        modalNameButton={"Add"}
                         showTages={false}
                       />
                     )}
@@ -137,7 +200,7 @@ const Lessons = () => {
             <DisplayData
               HandleOnclick={() => setShowModal(!showModal)}
               modalName={"chapter"}
-              modalNameButton={"add chapters"}
+              modalNameButton={"Add"}
             />
           )}
         </div>
@@ -159,61 +222,6 @@ const Lessons = () => {
   );
 };
 
-function Chapter({ title, handleSubChapterShowModel, isLessonExists }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center">
-        <i className="fas fa-grip-vertical text-gray-400 mr-3 cursor-move hover:text-gray-600"></i>
-        <div>
-          <h4 className="font-medium capitalize text-gray-900">{title}</h4>
-        </div>
-      </div>
-      <div className="flex items-center space-x-2">
-        {isLessonExists && (
-          <button
-            onClick={handleSubChapterShowModel}
-            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-          >
-            <i className="fas fa-plus mr-1"></i> Add Subchapter
-          </button>
-        )}
-        <button className="text-gray-500 hover:text-gray-700">
-          <i className="fas fa-edit"></i>
-        </button>
-        <button className="text-red-500 hover:text-red-700">
-          <i className="fas fa-trash"></i>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function Subchapter({ title, order }) {
-  return (
-    <div className="mt-3 ml-8 space-y-3">
-      <div className="subchapter-item px-4 py-3 transition-all hover:bg-gray-50 rounded">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <i className="fas fa-grip-vertical text-gray-400 mr-3 cursor-move hover:text-gray-600"></i>
-            <div>
-              <h5 className="text-sm font-medium text-gray-900">{title}</h5>
-              <p class="text-xs text-gray-500">order • {order}</p>
-            </div>
-          </div>
-          <div className="flex items-center w-[100px] space-x-2">
-            <button className="text-gray-500 hover:text-gray-700">
-              <i className="fas fa-edit"></i>
-            </button>
-            <button className="text-red-500 hover:text-red-700">
-              <i className="fas fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function DisplayData({
   HandleOnclick,
   modalName,
@@ -234,12 +242,13 @@ function DisplayData({
         Get started by adding your first {modalName}.
       </p>
 
-      <button
+      <Button
+        className="bg-[#4F39F6] font-bold hover:bg-indigo-600 py-2  text-white text-md mt-3 "
         onClick={HandleOnclick}
-        className="mt-4 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       >
-        <i className="fas fa-plus mr-1"></i> {modalNameButton}
-      </button>
+        <i className="fas fa-plus mr-1"></i>
+        {modalNameButton}
+      </Button>
     </div>
   );
 }
@@ -271,22 +280,16 @@ function AddChapterModal({ handleCloseModal, courseId }) {
     const formData = new FormData(e.target);
 
     const title = formData.get("chapter-title");
-    const order = formData.get("order");
 
-    if (!title || !order) {
+    if (!title) {
       if (!title) {
         setErrors((prev) => ({ ...prev, title: "Chapter title is required" }));
-      }
-
-      if (!order) {
-        setErrors((prev) => ({ ...prev, order: "Chapter order is required" }));
       }
       return;
     }
 
     const chapterData = {
       title,
-      order,
       courseId,
     };
     mutate({ ...chapterData });
@@ -294,14 +297,12 @@ function AddChapterModal({ handleCloseModal, courseId }) {
 
   return (
     <ModalLesson>
-      <form onSubmit={handleAddChapter} method="POST" className="relative">
-        <div className="flex items-center mb-3  gap-2">
-          <div className="w-10 h-10 flex justify-center items-center rounded-full bg-blue-500/60">
-            <i className="fas fa-plus text-indigo-600"></i>
+      <form onSubmit={handleAddChapter} method="POST" className="relative ">
+        <div className="flex items-center mb-3 gap-2">
+          <div className="w-6 h-6 flex cursor-pointer rounded-full bg-blue-500 justify-center items-center">
+            <i className="far fa-plus text-white"></i>
           </div>
-          <h2 className="text-xl pb-2 font-semibold text-gray-800">
-            Add Chapter
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-800">Add chapter</h2>
         </div>
 
         <Input
@@ -316,25 +317,20 @@ function AddChapterModal({ handleCloseModal, courseId }) {
           required={isErrorExists && errors.title ? true : false}
           error={isErrorExists && errors.title}
         />
-        <Input
-          type="number"
-          id="order"
-          name="order"
-          placeholder="e.g. 1"
-          onChange={() => {
-            setErrors((prev) => ({ ...prev, order: null }));
-          }}
-          className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring"
-          min={1}
-          label="Chapter Order"
-          required={isErrorExists && errors.order ? true : false}
-          error={isErrorExists && errors.order}
-        />
+
         <div className="flex justify-end space-x-2">
-          <Button>cancel</Button>
-          <Button type="sumbit">add</Button>
+          <Button className="border border-[#FF8040]  capitalize hover:bg-[#FF8040] hover:text-white">
+            cancel
+          </Button>
+          <Button
+            className="bg-blue-500 text-white px-[1rem] border-blue-500 capitalize hover:bg-blue-600"
+            // disabled={isPending}
+            type="submit"
+          >
+            add
+          </Button>
         </div>
-        <span className="absolute z-100 -top-6 -right-6 ">
+        <span className="absolute z-100 -top-3 -right-3 ">
           <i
             onClick={() => {
               handleCloseModal();
@@ -348,10 +344,11 @@ function AddChapterModal({ handleCloseModal, courseId }) {
 }
 
 function AddSubChapterModal({ chapterId, handleCloseModal }) {
+  const fileInput = useRef(null);
   const [errors, setErrors] = useState({});
   const [file, setFile] = useState(undefined);
 
-  const { mutate, isPending } = usePostMutation(
+  const { mutate, isPending, error } = usePostMutation(
     "api/sub-chapter",
     {
       onSuccess: () => {
@@ -365,6 +362,12 @@ function AddSubChapterModal({ chapterId, handleCloseModal }) {
     },
     "application/json"
   );
+
+  console.log(errors);
+
+  if (error) {
+    console.log("subchapter failed", error);
+  }
 
   const isErrorExists = Object.keys(errors).length > 0;
 
@@ -404,21 +407,22 @@ function AddSubChapterModal({ chapterId, handleCloseModal }) {
 
   const handleAddSubChapter = (e) => {
     e.preventDefault();
-
+    console.log("add subChapter");
     const formData = new FormData(e.target);
 
     const title = formData.get("title");
-    const order = formData.get("order");
+    const minute = formData.get("minute");
 
-    if (!title || !order || !file) {
+    if (!title || !file || !minute) {
       if (!title) {
         setErrors((prev) => ({ ...prev, title: "Chapter title is required" }));
       }
-
-      if (!order) {
-        setErrors((prev) => ({ ...prev, order: "Chapter order is required" }));
+      if (!minute) {
+        setErrors((prev) => ({
+          ...prev,
+          minute: "Chapter minute is required",
+        }));
       }
-
       if (!file) {
         setErrors((prev) => ({ ...prev, course_file: "please uploade file" }));
       }
@@ -431,9 +435,9 @@ function AddSubChapterModal({ chapterId, handleCloseModal }) {
     const apiData = new FormData();
 
     apiData.append("title", title);
-    apiData.append("order", order);
     apiData.append("course_file", file);
     apiData.append("chapterId", chapterId);
+    apiData.append("minute", minute);
 
     mutate(apiData);
   };
@@ -442,11 +446,12 @@ function AddSubChapterModal({ chapterId, handleCloseModal }) {
     <ModalLesson>
       <form onSubmit={handleAddSubChapter} action="" method="POST">
         <div className="flex items-center mb-3  gap-2">
-          <div className="w-10 h-10 flex justify-center items-center rounded-full bg-blue-500/60">
-            <i className="fas fa-plus text-indigo-600"></i>
+          <div className="w-8 h-8 flex cursor-pointer rounded-full bg-blue-500 justify-center items-center">
+            <i className="far fa-plus text-white"></i>
           </div>
-          <h2 className="text-xl pb-2 font-semibold text-gray-800">
-            Add sub Chapter
+
+          <h2 className="text-xl font-semibold text-gray-800">
+            Add Subchapter
           </h2>
         </div>
         <Input
@@ -454,8 +459,8 @@ function AddSubChapterModal({ chapterId, handleCloseModal }) {
           id="title"
           name={"title"}
           className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter chapter title"
-          label={"chapter title"}
+          placeholder="Enter the title of this chapter"
+          label={"Subchapter Title"}
           onChange={() => {
             setErrors(createNewObject(errors, "title"));
           }}
@@ -464,37 +469,66 @@ function AddSubChapterModal({ chapterId, handleCloseModal }) {
         />
         <Input
           type="number"
-          id="order"
-          name="order"
+          id="minute"
+          name={"minute"}
           className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. 1"
+          placeholder="Ex. 5"
+          label={"Total Minute to read the resource"}
           onChange={() => {
-            setErrors(createNewObject(errors, "order"));
+            setErrors(createNewObject(errors, "minute"));
           }}
-          min={1}
-          label=" Chapter Order"
-          required={isErrorExists && errors.order}
-          error={isErrorExists && errors.order}
+          required={isErrorExists && errors.minute}
+          error={isErrorExists && errors.minute}
         />
         <Input
           type="file"
           id="chapter-file"
+          ref={fileInput}
           onChange={handleFileChange}
           name={"course_file"}
-          className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border hidden cursor-pointer border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           min={1}
-          label="Reading file"
-          placeholder="insert please the file that students we read"
+          label="Reading File for Subchapter"
+          placeholder="Upload the reading file for this subchapter"
           required={isErrorExists && errors["course_file"]}
           error={isErrorExists && errors["course_file"]}
         />
-        <div className="flex justify-end  space-x-2">
-          <Button>cancel</Button>
-          <Button disabled={isPending} type="submit">
+
+        <div className="mb-4 flex items-center justify-between">
+          {!file && (
+            <Button
+              type="button"
+              className={`border border-gray-300 hover:bg-gray-100 rounded-lg p-2  focus:outline-none focus:ring-2 focus:ring-gray-500`}
+              onClick={() => fileInput.current.click()}
+            >
+              Upload File
+            </Button>
+          )}
+          {fileInput.current?.files[0]?.name && !errors["course_file"] && (
+            <p
+              className={`border border-gray-300 font-semibold bg-gray-100 rounded-lg p-2  `}
+            >
+              {fileInput.current.files[0].name}
+              <i
+                onClick={() => (setFile(null), (fileInput.current.value = ""))}
+                className="fas fa-remove text-red-600 hover:text-red-700 pl-2 cursor-pointer"
+              ></i>
+            </p>
+          )}
+        </div>
+
+        <div className="flex justify-end  space-x-3">
+          <Button className="border border-[#FF8040]  capitalize hover:bg-[#FF8040] hover:text-white">
+            cancel
+          </Button>
+          <Button
+            type="submit"
+            className="bg-blue-500 text-white px-[1rem] border-blue-500 capitalize hover:bg-blue-600"
+          >
             add
           </Button>
         </div>
-        <span className="absolute z-100 -top-6 -right-6 ">
+        <span className="absolute z-100 top-2 right-3 ">
           <i
             onClick={() => {
               handleCloseModal();

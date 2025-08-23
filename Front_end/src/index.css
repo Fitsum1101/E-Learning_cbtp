@@ -83,3 +83,7 @@
   outline: none;
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
 }
+
+.course-hero {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
