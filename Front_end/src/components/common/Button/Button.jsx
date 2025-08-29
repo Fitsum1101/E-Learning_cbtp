@@ -9,7 +9,7 @@ const Button = ({
   ...rest
 }) => {
   const base =
-    "px-4 py-2 rounded cursor-pointer font-semibold transition duration-200";
+    "px-4 py-0 rounded cursor-pointer font-semibold transition duration-200";
   const variants = {
     primary: "bg-blue-600 hover:bg-blue-700",
     secondary: "bg-gray-600 hover:bg-gray-700",

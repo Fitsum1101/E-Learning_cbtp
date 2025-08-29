@@ -1,7 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../services/api";
 
-const usePostMutation = (url, config, dataType = "application/json") => {
+const usePostMutation = (
+  url,
+  config = { invalidateQueryKey: undefined },
+  dataType = "application/json"
+) => {
   const queryClient = useQueryClient();
 
   return useMutation({

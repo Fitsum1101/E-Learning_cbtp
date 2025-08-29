@@ -1,10 +1,22 @@
-import React from "react";
-import Profile from "../../../components/common/Avater/Profile";
 import { Link } from "react-router-dom";
+
+import Profile from "../../../components/common/Avater/Profile";
 import CourseProgress from "../../../components/common/progress/CourseProgess";
 import Certificate from "../../../components/common/progress/Certificate";
+import ModalLesson from "../../../ui/Modal/ModalLesson";
+import { useState } from "react";
+import Button from "../../../components/common/Button/Button";
+import Modal from "@mui/material/Modal";
+import useCustomQuery from "../../../hooks/Query/useCustomQuery";
 
 const StudentDashboard = () => {
+  const [openStudentAvatarModal, setOpenStudentAvatarModal] = useState(false);
+
+  const { data: enrollmentCourses } = useCustomQuery(
+    "EnrollmentCourses",
+    "api/enrollments/courses"
+  );
+
   return (
     <div>
       <div>
@@ -70,8 +82,11 @@ const StudentDashboard = () => {
         <div className="flex justify-center items-center gap-5 mt-5">
           <div className="bg-white flex-1/2   rounded-2xl">
             <div className="bg-[#FAFAFA] h-[180px] border border-amber-100 rounded-2xl flex m-5 flex-col  justify-center items-center">
-              <Profile className="w-30 h-30" />
-              <Link className="text-sm text-blue-500 border-b-2 border-blue-500">
+              <Profile size={130} seed={"Eiden"} className=" p-1" />
+              <Link
+                className="text-sm text-blue-500 border-b-2 border-blue-500"
+                onClick={() => setOpenStudentAvatarModal(true)}
+              >
                 Edit Avatar
               </Link>
             </div>
@@ -105,17 +120,28 @@ const StudentDashboard = () => {
               </a>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-6">
-              {courses.map((course, index) => (
+              {enrollmentCourses?.map((course, index) => (
                 <CourseProgress
                   key={index}
-                  course={course.title}
+                  title={course.title}
                   progress={course.progress}
+                  description={course.description}
+                  thumbnail={course.thumbnail}
+                  totalLessons={course.totalLessons}
+                  completedLessons={course.completedLessons}
+                  slug={course.slug}
                 />
               ))}
             </div>
           </div>
         </div>
       </div>
+      {openStudentAvatarModal && (
+        <StudentAvatarModal
+          open={true}
+          onClose={() => setOpenStudentAvatarModal(false)}
+        />
+      )}
     </div>
   );
 };
@@ -123,7 +149,78 @@ const StudentDashboard = () => {
 const courses = [
   { title: "Course 1", progress: 50 },
   { title: "Course 2", progress: 75 },
-  { title: "Course 3", progress: 30 },
 ];
 
+const seeds = [
+  "lion123",
+  "tiger456",
+  "eagle789",
+  "bear321",
+  "fox654",
+  "wolf987",
+  "panda111",
+  "dragon222",
+];
+
+const style = "Adventurer";
+
 export default StudentDashboard;
+
+const StudentAvatarModal = ({ open, onClose }) => {
+  const { data: avatars } = useCustomQuery("avatar", "/api/avatar");
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <div className=" p-10  rounded-md   overflow-y-scroll gap-2 mx-auto absolute translate-y-[-50%] top-1/2 left-1/2 transform -translate-x-1/2  max-h-[90vh] w-[1024px] bg-white items-center">
+        <div className="ml-5 border-b-1 z-10 sticky left-0 top-0 pb-2 flex justify-between items-center border-gray-400">
+          <h1 className="text-xl font-bold text-black">Edit Avater</h1>
+          <div className="flex text-[12px] font-bold  gap-3">
+            {collection.map((style) => (
+              <p className="cursor-pointer capitalize ">{style}</p>
+            ))}
+          </div>
+        </div>
+        <div className="flex mt-10   gap-10 justify-between">
+          <div className="bg-[#f8f8f8] border-amber-100 border  rounded-md  flex flex-col justify-center items-center flex-1/3 max-h-[70vh]">
+            <Profile size={300} seed={"Chase"} className=" p-1" />
+            <Button>Apply</Button>
+          </div>
+          <div className="grid md:grid-cols-2 overflow-y-scroll max-h-[80vh]  lg:grid-cols-3 gap-5 ">
+            {avatars?.map((avatar) => (
+              <ProfileCart
+                key={avatar.id}
+                size={100}
+                seed={avatar.seed}
+                style={avatar?.AvatarCategory?.style}
+                className=" p-1"
+              />
+            ))}
+          </div>
+        </div>
+        {/* <Button onClick={onClose}>Close</Button> */}
+      </div>
+    </Modal>
+  );
+};
+
+const collection = [
+  "adventurer",
+  "croodles",
+  "adventurer-neutral",
+  "avataaars-neutral",
+  "avataaars",
+  "micah",
+  "initials",
+  "pixelArt",
+  "bottts",
+];
+
+const ProfileCart = ({ seed, size, style }) => {
+  return (
+    <div className="flex flex-col p-10 border-1 border-gray-300 items-center rounded-md justify-center">
+      <Profile size={size} style={style} seed={seed} className="" />
+      <p className="capitalize font-bold text-md">{seed}</p>
+      <p className="text-sm text-gray-500">free {seed}</p>
+    </div>
+  );
+};

@@ -4,8 +4,8 @@ import LinearProgress, {
   linearProgressClasses,
 } from "@mui/material/LinearProgress";
 
-const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-  height: 6,
+const BorderLinearProgress = styled(LinearProgress)(({ theme, value }) => ({
+  height: 8,
   borderRadius: 5,
   [`&.${linearProgressClasses.colorPrimary}`]: {
     backgroundColor: theme.palette.grey[200],
@@ -15,17 +15,17 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   },
   [`& .${linearProgressClasses.bar}`]: {
     borderRadius: 5,
-    backgroundColor: "#1a90ff",
+    backgroundColor: value === 100 ? "#4caf50" : "#1a90ff",
     ...theme.applyStyles("dark", {
       backgroundColor: "#308fe8",
     }),
   },
 }));
 
-export default function CustomizedProgressBars() {
+export default function CustomizedProgressBars({ value }) {
   return (
     <Stack spacing={2} sx={{ flexGrow: 1 }}>
-      <BorderLinearProgress variant="determinate" value={50} />
+      <BorderLinearProgress variant="determinate" value={value} />
     </Stack>
   );
 }

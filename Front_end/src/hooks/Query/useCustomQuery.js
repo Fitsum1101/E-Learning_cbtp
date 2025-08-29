@@ -2,14 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../../services/api";
 
 const useCustomQuery = (queryKey, url, searchParams = {}) => {
+  const searchParamsExists = Object.keys(searchParams).length > 0;
   const { data, isLoading, error, isError } = useQuery({
-    queryKey: [queryKey, searchParams],
+    queryKey: searchParamsExists ? [queryKey, searchParams] : [queryKey],
     queryFn: ({ queryKey }) => {
-      if (Object.keys(queryKey[1]).length > 0) {
+      console.log({ queryKey });
+      if (searchParamsExists) {
         const queryString = new URLSearchParams(queryKey[1]).toString();
         url += `?${queryString}`;
       }
-
       return api.get(url);
     },
     select: (response) => {
@@ -19,6 +20,7 @@ const useCustomQuery = (queryKey, url, searchParams = {}) => {
       }
       return [];
     },
+    staleTime: 10 * 60 * 1000, // 5 minutes
   });
 
   return { data, isLoading, error, isError };

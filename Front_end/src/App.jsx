@@ -13,8 +13,9 @@ import CourseDetail from "./pages/main/Course-detail";
 import ReadCourse from "./pages/main/ReadCourse";
 import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
 import BookMarks from "./pages/dashboard/student/BookMarks";
-import Tutorials from "./pages/dashboard/student/Tutorials";
 import MyCourses from "./pages/dashboard/student/MyCourses";
+import UpdateProifle from "./pages/main/Profile";
+import Certificate from "./pages/dashboard/student/certificate";
 
 const router = createBrowserRouter([
   {
@@ -74,14 +75,18 @@ const router = createBrowserRouter([
                 element: <BookMarks />,
               },
               {
-                path: "tutorials",
-                element: <Tutorials />,
-              },
-              {
                 path: "courses",
                 element: <MyCourses />,
               },
+              {
+                path: "certificates",
+                element: <Certificate />,
+              },
             ],
+          },
+          {
+            path: "profile",
+            element: <UpdateProifle />,
           },
         ],
       },
