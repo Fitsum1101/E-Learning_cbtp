@@ -11,6 +11,10 @@ const catagoryRoutes = require("./routes/categories/category.routes");
 const courseRoutes = require("./routes/courses/course.routes");
 const chapterRoutes = require("./routes/chapters/chapter.routes");
 const subChapterRoutes = require("./routes/subchapters/subchapter.routes");
+const enrollmentRoutes = require("./routes/Enrollement/Enrollement.routes");
+const avatarRouter = require("./routes/avatar/Avatar.route");
+const progressRouter = require("./routes/progress/progress.routes");
+const bookmarkRoutes = require("./routes/Bookmarks/bookmark.routes");
 
 const app = express();
 
@@ -20,11 +24,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(__dirname, "images")));
+app.use("/uploads", express.static(path.join(__dirname, "files")));
+
 app.use("/api", userRoutes);
 app.use("/api", catagoryRoutes);
 app.use("/api", courseRoutes);
 app.use("/api", chapterRoutes);
 app.use("/api", subChapterRoutes);
+app.use("/api", enrollmentRoutes);
+app.use("/api", avatarRouter);
+app.use("/api", progressRouter);
+app.use("/api", bookmarkRoutes);
 
 app.use((err, req, res, next) => {
   console.error("from express error handler", err);

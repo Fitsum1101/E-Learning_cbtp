@@ -175,7 +175,7 @@ exports.getSubChapterById = async (req, res, next) => {
   }
 };
 
-exports.getSubChapterById = async (req, res, next) => {
+exports.getSubChapterFile = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -189,6 +189,7 @@ exports.getSubChapterById = async (req, res, next) => {
         message: "NOT Found",
       });
     }
+    console.log(subChapter.fileUrl);
 
     const filePath = path.join(require.main.path, subChapter.fileUrl);
 

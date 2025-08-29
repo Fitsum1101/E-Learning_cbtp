@@ -15,6 +15,12 @@ enum Role{
        SUPER_ADMIN
 }
 
+enum CourseProgressStatus {
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+}
+
 model User {
   id            String        @id @default(uuid())
   firstName     String
@@ -31,7 +37,6 @@ model User {
   createdUsers  User[]        @relation("UserCreator")
 
   enrollments   Enrollment[]
-  progress      Progress[]
   ratings       Rating[]
   testimonials  Testimonial[]
 }
@@ -50,7 +55,7 @@ model Course {
   title         String
   slug          String         @unique
   description   String
-  level   String         @default("Beginner")
+  level         String         @default("Beginner")
   thumbnail     String
   published     Boolean        @default(false)
   createdAt     DateTime       @default(now())
@@ -89,6 +94,7 @@ model SubChapter {
   chapter     Chapter     @relation(fields: [chapterId], references: [id])
   progress    Progress[]
   resources   Resource[]
+  bookmarks   Bookmark []
 }
 
 model Resource {
@@ -110,6 +116,49 @@ model Enrollment {
 
   user       User     @relation(fields: [userId], references: [id])
   course     Course   @relation(fields: [courseId], references: [id])
+  progress   Progress[]
+  bookmarks  Bookmark[]
+}
+
+model Bookmark {
+  id           String      @id @default(uuid())
+  enrollmentId String
+  subChapterId String      
+  createdAt    DateTime    @default(now())
+  enrollment   Enrollment?  @relation(fields: [enrollmentId], references: [id])
+
+  subChapter   SubChapter?  @relation(fields: [subChapterId],  references: [id])
+  @@unique([enrollmentId, subChapterId])
+}
+
+
+model Progress {
+  id           String      @id @default(uuid())
+  enrollmentId String
+  subChapterId String
+  watchedAt    DateTime    @default(now())
+  completed    CourseProgressStatus @default(IN_PROGRESS)
+
+  enrollment   Enrollment  @relation(fields: [enrollmentId], references: [id])
+  subChapter   SubChapter  @relation(fields: [subChapterId], references: [id])
+}
+
+model AvatarCategory {
+  id        String   @id @default(uuid())
+  style      String   
+  createdAt DateTime @default(now())
+  Avatar    Avatar[]
+}
+
+model Avatar {
+   id        String   @id @default(uuid())
+   seed      String
+   styleId   String
+   courseComplete Int @default(0)
+   courseEnrolled Int @default(0)
+   courseCertificates Int @default(0)
+   createdAt DateTime @default(now())
+   AvatarCategory    AvatarCategory @relation(fields: [styleId], references: [id])
 }
 
 model Quiz {
@@ -121,6 +170,7 @@ model Quiz {
   course    Course     @relation(fields: [courseId], references: [id])
   questions Question[]
 }
+
 model Question {
   id        String     @id @default(uuid())
   text      String
@@ -137,17 +187,6 @@ model Option {
   questionId String
 
   question   Question  @relation(fields: [questionId], references: [id])
-}
-
-model Progress {
-  id           String      @id @default(uuid())
-  userId       String
-  subChapterId String
-  watchedAt    DateTime    @default(now())
-  completed    Boolean     @default(true)
-
-  user         User        @relation(fields: [userId], references: [id])
-  subChapter   SubChapter  @relation(fields: [subChapterId], references: [id])
 }
 
 model Rating {
@@ -175,3 +214,4 @@ model Testimonial {
   user       User     @relation(fields: [userId], references: [id])
   course     Course?  @relation(fields: [courseId], references: [id])
 }
+

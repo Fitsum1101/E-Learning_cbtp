@@ -344,8 +344,6 @@ exports.updateSubChapterOrder = async (req, res, next) => {
     where: { id: req.params.chapterId },
   });
 
-  console.log(req.body);
-
   if (!chapter) {
     return res.status(404).json({
       success: false,
@@ -389,4 +387,41 @@ exports.updateSubChapterOrder = async (req, res, next) => {
     success: true,
     message: "SubChapter order updated successfully",
   });
+};
+
+exports.getCourseAnalytics = async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+
+    const EnrolledCourse = await db.enrollment.aggregate({
+      where: {
+        userId,
+      },
+      _count: {
+        userId: true,
+      },
+    });
+
+    const completedCourses = await db.enrollment.aggregate({
+      where: {
+        userId,
+        completed: true,
+      },
+      _count: {
+        courseId: true,
+      },
+    });
+
+    const courseAnalytics = {
+      enrolledCourses: EnrolledCourse._count.courseId || 0,
+      completedCourses: completedCourses._count.courseId || 0,
+    };
+
+    res.json({
+      success: true,
+      data: { ...courseAnalytics },
+    });
+  } catch (error) {
+    next(error);
+  }
 };

@@ -76,4 +76,6 @@ router.get("/sub-chapter", subChapterController.getAllSubChapters);
 
 router.get("/sub-chapter/:id", subChapterController.getSubChapterById);
 
+router.get("/sub-chapter/file/:id", subChapterController.getSubChapterFile);
+
 module.exports = router;

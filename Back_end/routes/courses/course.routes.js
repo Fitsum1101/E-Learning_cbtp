@@ -80,4 +80,8 @@ router.patch(
   courseController.updateSubChapterOrder
 );
 
+// router.get("/courses/progress", courseController.getCourseProgress);
+
+router.get("/courses/analytics", courseController.getCourseAnalytics);
+
 module.exports = router;
