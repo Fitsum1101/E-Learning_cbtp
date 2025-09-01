@@ -10,12 +10,14 @@ import Lessons from "./pages/dashboard/admin/Lessons";
 import AddCourse from "./pages/dashboard/admin/AddCourse";
 import Courses from "./pages/main/Courses";
 import CourseDetail from "./pages/main/Course-detail";
+import CourseExam from "./pages/main/CourseExam";
 import ReadCourse from "./pages/main/ReadCourse";
 import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
 import BookMarks from "./pages/dashboard/student/BookMarks";
 import MyCourses from "./pages/dashboard/student/MyCourses";
 import UpdateProifle from "./pages/main/Profile";
 import Certificate from "./pages/dashboard/student/certificate";
+import Questions from "./pages/dashboard/admin/Questions";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +36,10 @@ const router = createBrowserRouter([
           {
             path: "learn",
             element: <ReadCourse />,
+          },
+          {
+            path: "exam",
+            element: <CourseExam />,
           },
         ],
       },
@@ -60,6 +66,10 @@ const router = createBrowserRouter([
               {
                 path: "courses/add",
                 element: <AddCourse />,
+              },
+              {
+                path: "questions",
+                element: <Questions />,
               },
             ],
           },

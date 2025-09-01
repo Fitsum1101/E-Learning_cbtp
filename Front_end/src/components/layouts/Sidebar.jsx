@@ -1,14 +1,15 @@
-import { Link, NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 const role = "admin";
+
+//  create me a function to add three array numbers
 
 const Sidebar = () => {
   return (
     <div className="w-64 bg-white hidden lg:block  text-[#000] h-full p-5">
       <div className="mb-3">
-        <div className="flex items-center text-md mb-2">
-          <i className="fa-solid fa-tachometer-alt text-lg mr-3 text-gray-500"></i>
-
+        <div className="flex items-center mb-2 text-md">
+          <i className="mr-3 text-lg text-gray-500 fa-solid fa-tachometer-alt"></i>
           <NavLink
             style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
             className=""
@@ -22,7 +23,7 @@ const Sidebar = () => {
         {role === "student" && (
           <div className="flex flex-col gap-2 ">
             <div className="flex items-center text-md ">
-              <i className="fas fa-graduation-cap text-gray-400 mr-3"></i>
+              <i className="mr-3 text-gray-400 fas fa-graduation-cap"></i>
               <NavLink
                 style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
                 className=""
@@ -32,7 +33,7 @@ const Sidebar = () => {
               </NavLink>
             </div>
             <div className="flex items-center text-md ">
-              <i className="fa-solid fa-bookmark text-gray-400 text-lg mr-3"></i>
+              <i className="mr-3 text-lg text-gray-400 fa-solid fa-bookmark"></i>
               <NavLink
                 style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
                 className=""
@@ -43,7 +44,7 @@ const Sidebar = () => {
             </div>
 
             <div className="flex items-center text-md ">
-              <i className="fas fa-certificate text-gray-400 mr-3"></i>
+              <i className="mr-3 text-gray-400 fas fa-certificate"></i>
               <NavLink
                 style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
                 className=""
@@ -55,9 +56,9 @@ const Sidebar = () => {
           </div>
         )}
         {(role === "admin" || role === "Super_admin") && (
-          <div className="flex flex-col gap-3 items-center">
+          <div className="flex flex-col items-center gap-3">
             <div className="flex items-center text-md ">
-              <i className="fas fa-graduation-cap mr-3"></i>
+              <i className="mr-3 fas fa-graduation-cap"></i>
               <NavLink
                 style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
                 className=""
@@ -67,7 +68,7 @@ const Sidebar = () => {
               </NavLink>
             </div>
             <div className="flex items-center text-md ">
-              <i className="fa-regular text-lg text-gray-500 mr-3 fa-clipboard"></i>
+              <i className="mr-3 text-lg text-gray-500 fa-regular fa-clipboard"></i>
               <NavLink
                 style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
                 className=""
@@ -77,7 +78,7 @@ const Sidebar = () => {
               </NavLink>
             </div>
             <div className="flex items-center text-md ">
-              <i className="fa-solid fa-file-alt text-lg mr-3 text-gray-400"></i>
+              <i className="mr-3 text-lg text-gray-400 fa-solid fa-file-alt"></i>
               <NavLink
                 style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
                 className=""
@@ -87,7 +88,17 @@ const Sidebar = () => {
               </NavLink>
             </div>
             <div className="flex items-center text-md ">
-              <i className="fa-solid fa-user-graduate text-lg mr-3 text-gray-400"></i>
+              <i className="mr-3 text-lg text-gray-400 fa-solid fa-question-circle"></i>
+              <NavLink
+                style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
+                className=""
+                to="/dashboard/admin/questions"
+              >
+                Questions
+              </NavLink>
+            </div>
+            <div className="flex items-center text-md ">
+              <i className="mr-3 text-lg text-gray-400 fa-solid fa-user-graduate"></i>
               <NavLink
                 style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
                 className=""
@@ -100,8 +111,8 @@ const Sidebar = () => {
         )}
       </div>
       <div className="mb-5">
-        <div className="flex items-center text-md mb-2">
-          <i className="fas text-lg text-gray-400 fa-user mr-3"></i>
+        <div className="flex items-center mb-2 text-md">
+          <i className="mr-3 text-lg text-gray-400 fas fa-user"></i>
           <NavLink
             style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
             className=""
