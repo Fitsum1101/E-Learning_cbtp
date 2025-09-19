@@ -1,25 +1,47 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, BookOpen, BookMarkedIcon, Bookmark } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import useCustomQuery from "../../hooks/Query/useCustomQuery";
 import Button from "../../components/common/Button/Button";
 import api from "../../services/api";
 import MarkdownRenderer from "../../components/markdown/MarkdownRenderer ";
 import CourseProgress from "../../components/common/progress/CourseProgess";
 import CustomizedProgressBars from "../../components/common/progress/LinearProgress";
+import { ClipLoader } from "react-spinners";
+import { useLessonContext } from "../../store/course/lesson-context";
 
 const ReadCourse = () => {
   const { slug } = useParams();
-  const [activeLessonId, setActiveLessonId] = useState(null);
+  const { lesson, handleLesson } = useLessonContext();
+
   const [lessonId, setLessonId] = useState(null);
 
   const queryClient = useQueryClient();
 
-  const { data, error } = useCustomQuery(
-    "courseDetail",
-    `/api/Enrollments/${slug}`
-  );
+  const { data, error } = useQuery({
+    queryKey: ["courseDetail", { slug }],
+    queryFn: ({ queryKey }) => {
+      return api.get(`/api/Enrollments/${queryKey[1].slug}`);
+    },
+    select: (res) => {
+      const data = res.data?.data;
+      let activeLesson;
+
+      data.courseData.forEach((chapter) => {
+        const lessonIndex = chapter.subChapters.findIndex(
+          (lesson, i) => lesson.isCurrentCourse === true
+        );
+        if (lessonIndex !== -1) {
+          activeLesson = chapter.subChapters[lessonIndex];
+        }
+      });
+
+      !lesson && handleLesson(activeLesson);
+
+      return data;
+    },
+  });
 
   const { mutate } = useMutation({
     mutationKey: ["courseMutation", { id: data?.course?.id }],
@@ -27,9 +49,9 @@ const ReadCourse = () => {
       api.post(`/api/progress/course/${data?.course?.id}`, { ...datas });
     },
     onMutate: (variables) => {
-      const prev = queryClient.getQueryData(["courseDetail"]);
+      const prev = queryClient.getQueryData(["courseDetail", { slug }]);
 
-      queryClient.setQueryData(["courseDetail"], (oldData) => {
+      queryClient.setQueryData(["courseDetail", { slug }], (oldData) => {
         const old = { ...oldData };
         const course = old?.data?.data?.course || {};
         const courseData = old?.data?.data?.courseData || {};
@@ -66,9 +88,35 @@ const ReadCourse = () => {
       return { prev: prev?.data?.data || {} };
     },
     onError: (error, variables, context) => {
-      queryClient.setQueryData(["courseDetail"], () => context.prev);
+      queryClient.setQueryData(["courseDetail", { slug }], () => context.prev);
     },
   });
+
+  const handleQuetionCatch = (lesson) => {
+    queryClient.setQueryData(["courseDetail", { slug }], (oldData) => {
+      const old = { ...oldData };
+      const course = old?.data?.data?.course || {};
+      const courseData = old?.data?.data?.courseData || {};
+      handleLesson(lesson);
+      return {
+        ...oldData,
+        data: {
+          ...oldData?.data,
+          data: {
+            ...oldData?.data?.data,
+            courseData: courseData.map((chapter) => {
+              const subChapters = chapter.subChapters.map((les, i) => {
+                if (lesson.id === les.id)
+                  return { ...les, isCurrentCourse: true };
+                else return { ...les, isCurrentCourse: false };
+              });
+              return { ...chapter, subChapters };
+            }),
+          },
+        },
+      };
+    });
+  };
 
   const handleOnChange = (subChapterId, completed) =>
     mutate({ subChapterId, completed });
@@ -108,11 +156,11 @@ const ReadCourse = () => {
                 {chapter.title}
               </h3>
               <ul className="list-disc flex flex-col gap-1">
-                {chapter?.subChapters?.map((lesson, i) => (
+                {chapter?.subChapters?.map((les, i) => (
                   <li
-                    key={lesson.id}
+                    key={les.id}
                     className={` list-none  pl-3 flex gap-2 cursor-pointer delay-100 ${
-                      activeLessonId === lesson.id
+                      lesson?.id === les.id
                         ? "bg-blue-500 hover:bg-blue-600  text-white "
                         : "hover:bg-gray-300"
                     }`}
@@ -126,22 +174,22 @@ const ReadCourse = () => {
                       }}
                       type="checkbox"
                       name="completed"
-                      defaultChecked={lesson.completed === "COMPLETED"}
+                      defaultChecked={les.completed === "COMPLETED"}
                       onClick={(e) => {
-                        setLessonId(lesson.id);
+                        setLessonId(les.id);
                         if (e.target.checked) {
-                          handleOnChange(lesson.id, "COMPLETED");
+                          handleOnChange(les.id, "COMPLETED");
                         } else {
-                          handleOnChange(lesson.id, "IN_PROGRESS");
+                          handleOnChange(les.id, "IN_PROGRESS");
                         }
                       }}
                     />
 
                     <span
                       className="truncate ml-2 block w-full"
-                      onClick={() => setActiveLessonId(lesson.id)}
+                      onClick={() => handleQuetionCatch(les)}
                     >
-                      {lesson.title}
+                      {les.title}
                     </span>
                   </li>
                 ))}
@@ -151,7 +199,7 @@ const ReadCourse = () => {
         </div>
         <div className="w-full flex flex-col mx-8 rounded-md  border-gray-200 border shadow shadow-gray-200  p-8 gap-4 overflow-y-scroll  text-xl">
           <ReadCourseSkeleton
-            id={activeLessonId || data?.courseData[1]?.subChapters[0]?.id}
+            id={lesson && lesson?.id}
             enrollmentId={data?.enrollment.id}
           />
         </div>
@@ -206,7 +254,11 @@ const ReadCourseSkeleton = ({ id, enrollmentId }) => {
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="w-full h-screen flex items-center justify-center">
+        <ClipLoader color="blue" size={50} />
+      </div>
+    );
   }
 
   return (

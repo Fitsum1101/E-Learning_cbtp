@@ -3,9 +3,21 @@ import api from "../../../services/api";
 import Modal from "@mui/material/Modal";
 import { useState } from "react";
 import Button from "../../../components/common/Button/Button";
+import { Bookmark, BookmarkCheckIcon, BookmarkIcon } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useLessonContext } from "../../../store/course/lesson-context";
 
 const BookMarks = () => {
   const queryClient = useQueryClient();
+  const { handleLesson } = useLessonContext();
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedBookmark, setSelectedBookmark] = useState(null);
+  const navigate = useNavigate();
+
+  const handleReading = (lesson) => {
+    handleLesson({ ...lesson, id: lesson?.subChapter.id });
+    navigate(`/course/${lesson.courseSlug}/learn`);
+  };
 
   const { data: bookmarks } = useQuery({
     queryKey: ["getBookmarks"],
@@ -18,9 +30,6 @@ const BookMarks = () => {
       return [];
     },
   });
-
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedBookmark, setSelectedBookmark] = useState(null);
 
   const { mutate, error } = useMutation({
     mutationKey: ["toggleBookmark"],
@@ -66,18 +75,25 @@ const BookMarks = () => {
         {bookmarks?.map((bookmark) => (
           <div
             key={bookmark.id}
-            className="border relative p-4 border-gray-300 rounded-lg   "
+            onClick={(e) => {
+              e.stopPropagation();
+              handleReading(bookmark);
+            }}
+            className="border cursor-pointer relative p-4 border-gray-300 rounded-lg "
           >
-            <div className="absolute right-0 top-0 m-4 flex items-center gap-3">
-              <i
-                onClick={() => {
-                  setSelectedBookmark(bookmark);
-                  setOpenModal(true);
-                }}
-                className={`fa-solid text-xl cursor-pointer ${
-                  bookmark.isInBookmark ? "text-blue-500" : "text-gray-500"
-                } fa-bookmark`}
-              ></i>
+            <div className="absolute  right-0 z-1 top-0 m-4 flex items-center gap-3">
+              {bookmark.isInBookmark && (
+                <Bookmark
+                  color={bookmark.isInBookmark ? "blue" : "gray"}
+                  fill={bookmark.isInBookmark ? "blue" : "transparent"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedBookmark(bookmark);
+                    setOpenModal(true);
+                  }}
+                  className="cursor-pointer"
+                />
+              )}
             </div>
             <div className="w-15  h-15  rounded-full overflow-hidden">
               <img
@@ -93,7 +109,7 @@ const BookMarks = () => {
             <div className="flex flex-col pb-6 text-sm my-2 gap-1">
               <p className="text-gray-500 font-semibold">Lesson</p>
               <h2 className="text-xl font-semibold capitalize">
-                {bookmark.subChapterTitle}
+                {bookmark.subChapter.subChapterTitle}
               </h2>
               <p className="text-gray-500 font-semibold">
                 {bookmark.courseTitle}

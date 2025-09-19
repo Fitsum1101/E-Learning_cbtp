@@ -9,6 +9,7 @@ const Input = ({
   required = false,
   className = "",
   ref,
+  defaultValue = "",
   ...rest
 }) => {
   return (
@@ -31,6 +32,7 @@ const Input = ({
         placeholder={placeholder}
         required={required}
         ref={ref}
+        defaultValue={defaultValue}
         className={`w-full px-3 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
           error ? "border-red-500" : "border-gray-300"
         } ${className}`}

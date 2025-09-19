@@ -2,8 +2,6 @@ import { NavLink } from "react-router-dom";
 
 const role = "admin";
 
-//  create me a function to add three array numbers
-
 const Sidebar = () => {
   return (
     <div className="w-64 bg-white hidden lg:block  text-[#000] h-full p-5">

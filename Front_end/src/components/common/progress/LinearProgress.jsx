@@ -17,7 +17,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme, value }) => ({
     borderRadius: 5,
     backgroundColor: value === 100 ? "#4caf50" : "#1a90ff",
     ...theme.applyStyles("dark", {
-      backgroundColor: "#308fe8",
+      backgroundColor: "308fe8",
     }),
   },
 }));

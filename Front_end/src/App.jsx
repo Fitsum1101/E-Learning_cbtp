@@ -18,6 +18,7 @@ import MyCourses from "./pages/dashboard/student/MyCourses";
 import UpdateProifle from "./pages/main/Profile";
 import Certificate from "./pages/dashboard/student/certificate";
 import Questions from "./pages/dashboard/admin/Questions";
+import LessonContextProvider from "./store/course/LessonContextProvider";
 
 const router = createBrowserRouter([
   {
@@ -108,7 +109,9 @@ const App = () => {
   return (
     <div className="relative">
       <ToastContainer />
-      <RouterProvider router={router} />
+      <LessonContextProvider>
+        <RouterProvider router={router} />
+      </LessonContextProvider>
     </div>
   );
 };
