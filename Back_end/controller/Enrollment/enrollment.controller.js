@@ -70,12 +70,21 @@ exports.getEnrollmentById = async (req, res, next) => {
           },
         },
       },
+      orderBy: {
+        watchedAgain: "asc",
+      },
     });
 
-    const subChaptersId = subChapterProgress.map((p) => ({
-      id: p.subChapter.id,
-      completed: p.completed,
-    }));
+    const subChaptersId = subChapterProgress.map((p) => {
+      return {
+        id: p.subChapter.id,
+        completed: p.completed,
+      };
+    });
+
+    const lastCompletedLessonId = subChapterProgress.findIndex(
+      (sub) => sub.completed === "COMPLETED"
+    );
 
     const lessonsData = await db.course.findUnique({
       where: {
@@ -100,30 +109,41 @@ exports.getEnrollmentById = async (req, res, next) => {
 
       const subChaptersData = [];
 
-      subChapters.forEach((subChapter) => {
-        totalLesson += 1;
-        const subChapterIndex = subChaptersId.findIndex(
-          (sc) => sc.id === subChapter.id
-        );
-        if (subChapterIndex !== -1) {
-          if (subChaptersId[subChapterIndex].completed === "COMPLETED") {
-            completedLesson += 1;
+      subChapters
+        .sort((a, b) => a.order - b.order)
+        .forEach((subChapter, i) => {
+          totalLesson += 1;
+
+          const subChapterIndex = subChaptersId.findIndex(
+            (sc) => sc.id === subChapter.id
+          );
+
+          if (subChapterIndex !== -1) {
+            if (subChaptersId[subChapterIndex].completed === "COMPLETED") {
+              completedLesson += 1;
+            }
+            subChaptersData.push({
+              ...(lastCompletedLessonId === subChapterIndex && {
+                isCurrentCourse: true,
+              }),
+              ...subChapter,
+              completed: subChaptersId[subChapterIndex].completed,
+            });
+          } else {
+            subChaptersData.push({
+              ...(lastCompletedLessonId === -1 &&
+                i === 0 && {
+                  isCurrentCourse: true,
+                }),
+              ...subChapter,
+              completed: "IN_PROGRESS",
+            });
           }
-          subChaptersData.push({
-            ...subChapter,
-            completed: subChaptersId[subChapterIndex].completed,
-          });
-        } else {
-          subChaptersData.push({
-            ...subChapter,
-            completed: "IN_PROGRESS",
-          });
-        }
-      });
+        });
 
       courseData.push({
         ...p,
-        subChapters: subChaptersData,
+        subChapters: subChaptersData.sort((a, b) => a.order - b.order),
       });
     });
 
@@ -138,7 +158,7 @@ exports.getEnrollmentById = async (req, res, next) => {
         enrollment: {
           id: enrollment.id,
         },
-        courseData,
+        courseData: courseData.sort((a, b) => a.order - b.order),
         course: {
           title: lessonsData.title,
           id: lessonsData.id,

@@ -71,17 +71,18 @@ exports.getBookMarks = async (req, res, next) => {
       },
     });
 
-    console.log(bookmarks);
-
     const data = bookmarks.map((bookmark) => ({
       id: bookmark.id,
       enrollmentId: bookmark.enrollmentId,
       courseId: bookmark.enrollment.course.id,
       courseTitle: bookmark.enrollment.course.title,
+      courseSlug: bookmark.enrollment.course.slug,
       courseThumbnail: bookmark.enrollment.course.thumbnail,
-      subChapterTitle: bookmark.subChapter.title,
       courseCompleted: bookmark.enrollment.course.completed,
-      subChapterId: bookmark.subChapter.id,
+      subChapter: {
+        subChapterTitle: bookmark.subChapter.title,
+        id: bookmark.subChapter.id,
+      },
       isInBookmark: true,
       createdAt: bookmark.createdAt,
     }));

@@ -65,7 +65,8 @@ model Course {
 
   category      CourseCategory @relation(fields: [categoryId], references: [id])
   enrollments   Enrollment[]
-  quizzes       Quiz[] 
+  question   Question[]
+
   chapters      Chapter[]
   ratings       Rating[]
   testimonials  Testimonial[]
@@ -77,7 +78,6 @@ model Chapter {
   order       Int
   courseId    String
   createdAt   DateTime    @default(now())
-
   course      Course      @relation(fields: [courseId], references: [id])
   subChapters SubChapter[]
 }
@@ -138,6 +138,7 @@ model Progress {
   subChapterId String
   watchedAt    DateTime    @default(now())
   completed    CourseProgressStatus @default(IN_PROGRESS)
+  watchedAgain   DateTime  @default(now()) @updatedAt()
 
   enrollment   Enrollment  @relation(fields: [enrollmentId], references: [id])
   subChapter   SubChapter  @relation(fields: [subChapterId], references: [id])
@@ -161,22 +162,14 @@ model Avatar {
    AvatarCategory    AvatarCategory @relation(fields: [styleId], references: [id])
 }
 
-model Quiz {
-  id        String     @id @default(uuid())
-  title     String
-  courseId  String
-  createdAt DateTime   @default(now())
-
-  course    Course     @relation(fields: [courseId], references: [id])
-  questions Question[]
-}
 
 model Question {
   id        String     @id @default(uuid())
-  text      String
-  quizId    String
+  question  String
+  courseId  String
 
-  quiz      Quiz       @relation(fields: [quizId], references: [id])
+  
+  course    Course     @relation(fields: [courseId], references: [id])
   options   Option[]
 }
 
