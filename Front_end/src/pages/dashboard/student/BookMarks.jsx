@@ -1,17 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import api from "../../../services/api";
+import { useNavigate } from "react-router-dom";
+import { Bookmark } from "lucide-react";
 import Modal from "@mui/material/Modal";
 import { useState } from "react";
+
+import { useCourseContext } from "../../../store/course/course-context";
 import Button from "../../../components/common/Button/Button";
-import { Bookmark, BookmarkCheckIcon, BookmarkIcon } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useLessonContext } from "../../../store/course/lesson-context";
+import api from "../../../services/api";
 
 const BookMarks = () => {
-  const queryClient = useQueryClient();
-  const { handleLesson } = useLessonContext();
   const [openModal, setOpenModal] = useState(false);
   const [selectedBookmark, setSelectedBookmark] = useState(null);
+
+  const queryClient = useQueryClient();
+  const { handleLesson } = useCourseContext();
+
   const navigate = useNavigate();
 
   const handleReading = (lesson) => {
@@ -61,7 +64,7 @@ const BookMarks = () => {
   return (
     <div>
       <div className="flex flex-col gap-3 h-[200px] bg-white p-10 mb-5 rounded-lg shadow">
-        <h2 className="font-bold capitalize text-2xl">Bookmarks</h2>
+        <h2 className="text-2xl font-bold capitalize">Bookmarks</h2>
         <p className="text-gray-500">
           Access your favorite W3Schools learning resources in one place.
         </p>
@@ -71,7 +74,7 @@ const BookMarks = () => {
           <NoBookMarks />
         </div>
       )}
-      <div className="grid grid-cols-1  bg-white p-10 rounded-lg shadow md:grid-cols-2 lg:grid-cols-3  gap-4">
+      <div className="grid grid-cols-1 gap-4 p-10 bg-white rounded-lg shadow md:grid-cols-2 lg:grid-cols-3">
         {bookmarks?.map((bookmark) => (
           <div
             key={bookmark.id}
@@ -79,9 +82,9 @@ const BookMarks = () => {
               e.stopPropagation();
               handleReading(bookmark);
             }}
-            className="border cursor-pointer relative p-4 border-gray-300 rounded-lg "
+            className="relative p-4 border border-gray-300 rounded-lg cursor-pointer "
           >
-            <div className="absolute  right-0 z-1 top-0 m-4 flex items-center gap-3">
+            <div className="absolute top-0 right-0 flex items-center gap-3 m-4 z-1">
               {bookmark.isInBookmark && (
                 <Bookmark
                   color={bookmark.isInBookmark ? "blue" : "gray"}
@@ -95,29 +98,29 @@ const BookMarks = () => {
                 />
               )}
             </div>
-            <div className="w-15  h-15  rounded-full overflow-hidden">
+            <div className="overflow-hidden rounded-full w-15 h-15">
               <img
                 src={
                   "http://localhost:5000/uploads/" +
                   bookmark?.courseThumbnail?.split("\\")[1]
                 }
                 alt="Course"
-                className="w-full h-full object-cover"
+                className="object-cover w-full h-full"
               />
             </div>
 
-            <div className="flex flex-col pb-6 text-sm my-2 gap-1">
-              <p className="text-gray-500 font-semibold">Lesson</p>
+            <div className="flex flex-col gap-1 pb-6 my-2 text-sm">
+              <p className="font-semibold text-gray-500">Lesson</p>
               <h2 className="text-xl font-semibold capitalize">
                 {bookmark.subChapter.subChapterTitle}
               </h2>
-              <p className="text-gray-500 font-semibold">
+              <p className="font-semibold text-gray-500">
                 {bookmark.courseTitle}
               </p>
             </div>
-            <div className="flex text-gray-500 border-t pt-4  border-gray-300  text-sm font-semibold justify-between">
+            <div className="flex justify-between pt-4 text-sm font-semibold text-gray-500 border-t border-gray-300">
               <div className="flex items-center gap-1">
-                <i className="fa-solid text-md  pr-1 fa-circle-check"></i>
+                <i className="pr-1 fa-solid text-md fa-circle-check"></i>
                 <p>Not completed</p>
               </div>
               <p>
@@ -136,12 +139,12 @@ const BookMarks = () => {
         }}
       >
         <div className="flex border-0 bg-white mx-auto mt-20 max-w-[450px] rounded-lg flex-col p-6">
-          <h2 className="text-xl pb-5 mb-2 font-bold">Remove Bookmark</h2>
-          <p className="text-black line-clamp-2 pb-6 leading-5">
+          <h2 className="pb-5 mb-2 text-xl font-bold">Remove Bookmark</h2>
+          <p className="pb-6 leading-5 text-black line-clamp-2">
             Are you sure you want to remove &quot;
             {selectedBookmark?.subChapterTitle}&quot; from your bookmarks?
           </p>
-          <div className="flex justify-end gap-4 self-end">
+          <div className="flex self-end justify-end gap-4">
             <Button
               className="border px-7 py-[1px]  rounded-md border-gray-400"
               onClick={() => setOpenModal(false)}
@@ -157,7 +160,7 @@ const BookMarks = () => {
                 setOpenModal(false);
                 setSelectedBookmark(null);
               }}
-              className="bg-red-500 px-7 rounded-md text-white"
+              className="text-white bg-red-500 rounded-md px-7"
             >
               Remove
             </Button>
@@ -170,9 +173,9 @@ const BookMarks = () => {
 
 const NoBookMarks = () => {
   return (
-    <div className="flex items-center justify-center flex-col h-full">
-      <i className="fa text-5xl mb-5 text-gray-500 fa-bookmark"></i>
-      <h3 className="text-xl mb-2">No bookmarks found</h3>
+    <div className="flex flex-col items-center justify-center h-full">
+      <i className="mb-5 text-5xl text-gray-500 fa fa-bookmark"></i>
+      <h3 className="mb-2 text-xl">No bookmarks found</h3>
       <p className="text-gray-400">
         Click the bookmark icon in tutorials to save your favorite tutorials.
         You can see all tutorials here.

@@ -96,6 +96,16 @@ const Sidebar = () => {
               </NavLink>
             </div>
             <div className="flex items-center text-md ">
+              <i className="mr-3 text-lg text-gray-400 fa-solid fa-question-circle"></i>
+              <NavLink
+                style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
+                className=""
+                to="/dashboard/admin/exam"
+              >
+                Exam
+              </NavLink>
+            </div>
+            <div className="flex items-center text-md ">
               <i className="mr-3 text-lg text-gray-400 fa-solid fa-user-graduate"></i>
               <NavLink
                 style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}

@@ -8,8 +8,7 @@ const Button = ({
   className = "",
   ...rest
 }) => {
-  const base =
-    "px-4 py-0 rounded cursor-pointer font-semibold transition duration-200";
+  const base = "px-4 py-0 rounded  font-semibold transition duration-200";
   const variants = {
     primary: "bg-blue-600 hover:bg-blue-700",
     secondary: "bg-gray-600 hover:bg-gray-700",
@@ -24,7 +23,7 @@ const Button = ({
       onClick={onClick}
       disabled={disabled || loading}
       className={`${base}  ${className} ${
-        disabled ? "opacity-50 cursor-not-allowed" : ""
+        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
       }`}
       {...rest}
     >

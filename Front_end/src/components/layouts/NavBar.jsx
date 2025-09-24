@@ -1,26 +1,34 @@
-import { Link } from "react-router-dom";
-import Profile from "../common/Avater/Profile";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+
+import Profile from "../common/Avater/Profile";
+import { useCourseContext } from "../../store/course/course-context";
+import AvatarProgress from "../common/Avater/AvaterProgress";
 
 const NavBar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { course } = useCourseContext();
+
+  const progress = course?.progress ? course?.progress : 0;
+
+  const courseProgressByPixle = Math.ceil((progress * 15) / 100);
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <header className="bg-white   shadow-sm">
-      <div className="container mx-auto px-4 py-2 flex justify-between items-center">
+    <header className="bg-white shadow-sm">
+      <div className="container flex items-center justify-between px-4 py-2 mx-auto">
         <div className="flex items-center space-x-2">
-          <i className="fas fa-graduation-cap text-indigo-600 text-3xl"></i>
+          <i className="text-3xl text-indigo-600 fas fa-graduation-cap"></i>
           <h1 className="text-2xl font-bold text-gray-800">EduLearn</h1>
         </div>
-        <nav className="hidden md:flex space-x-8">
+        <nav className="hidden space-x-8 md:flex">
           <a href="#" className="text-gray-600 hover:text-indigo-600">
             Home
           </a>
-          <a href="#" className="text-indigo-600 font-medium">
+          <a href="#" className="font-medium text-indigo-600">
             Courses
           </a>
           <a href="#" className="text-gray-600 hover:text-indigo-600">
@@ -31,23 +39,44 @@ const NavBar = () => {
           </a>
         </nav>
         <div className="flex items-center space-x-4">
-          {/* <button className="hidden md:block bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition">
+          {/* <button className="hidden px-4 py-2 text-white transition bg-indigo-600 rounded-md md:block hover:bg-indigo-700">
             Sign In
           </button>
        */}
-          <div
-            onClick={handleToggleSidebar}
-            className="w-15 relative  h-14 cursor-pointer rounded-full border-3 border-gray-200 hover:border-gray-300"
+
+          {/* {
+            <div
+              onClick={handleToggleSidebar}
+              className={`relative border-gray-200 rounded-full  cursor-pointer   h-15 w-15 border-3 hover:border-gray-300`}
+            >
+              <Profile className="p-1" />
+              <i
+                className={`fas absolute -right-7 z-20 -bottom-1 h-auto w-10 text-gray-500 fa-caret-${
+                  isSidebarOpen ? "up" : "down"
+                }`}
+              ></i>
+            </div>
+          } */}
+
+          <AvatarProgress
+            handleOnclick={handleToggleSidebar}
+            progress={progress}
+            size={64}
+            className="relative flex items-center justify-center cursor-pointer"
           >
-            <Profile className=" p-1" />
+            <Profile size={50} className="p-1" />
             <i
-              className={`fas absolute -right-7 z-20 -bottom-1 h-auto w-10 text-gray-500 fa-caret-${
+              className={`fas absolute -right-7 z-20 -bottom-0 h-auto w-10 text-gray-500 fa-caret-${
                 isSidebarOpen ? "up" : "down"
               }`}
             ></i>
-          </div>
+            <StudentProfileModal
+              className={`${
+                isSidebarOpen ? "sidebar-open " : "sidebar-close hidden"
+              }`}
+            />
+          </AvatarProgress>
         </div>
-        {isSidebarOpen && <StudentProfileModal />}
       </div>
     </header>
   );
@@ -58,33 +87,36 @@ const studentSidebarLinks = [
   {
     name: "Dashboard",
     path: "/student/dashboard",
-    icon: <i className="fas pr-4 text-xl fa-tachometer-alt"></i>,
+    icon: <i className="pr-4 text-xl fas fa-tachometer-alt"></i>,
   },
   {
     name: "Courses",
     path: "/student/courses",
-    icon: <i className="fas pr-4 text-xl fa-book"></i>,
+    icon: <i className="pr-4 text-xl fas fa-book"></i>,
   },
   {
     name: "Assignments",
     path: "/student/assignments",
-    icon: <i className="fas pr-4 text-xl  fa-tasks"></i>,
+    icon: <i className="pr-4 text-xl fas fa-tasks"></i>,
   },
   {
     name: "BookMarks",
     path: "/student/bookmarks",
-    icon: <i className="fas pr-4 text-xl fa-bookmark"></i>,
+    icon: <i className="pr-4 text-xl fas fa-bookmark"></i>,
   },
   {
     name: "Profile",
     path: "/student/profile",
-    icon: <i className="fas pr-4 text-xl fa-user"></i>,
+    icon: <i className="pr-4 text-xl fas fa-user"></i>,
   },
 ];
 
-const StudentProfileModal = () => {
+const StudentProfileModal = ({ className }) => {
   return (
-    <div className="fixed z-19 flex top-15  border border-t-0 border-gray-200  bg-white  text-[#333] w-[334px] right-0 h-screen">
+    <div
+      className={`fixed  z-19 top-15 ${className} border border-t-0 border-gray-200  bg-white  text-[#333] w-[334px] right-0 h-screen`}
+    >
+      <div></div>
       <ul className="flex flex-col gap-2 ">
         {studentSidebarLinks.map((link) => (
           <li className="font-semibold text-[#333] " key={link.path}>

@@ -111,17 +111,22 @@ const CreateQuestions = (props) => {
       >
         Create new Questions
       </Button>
-      <div className="py-2">
-        <p className="flex items-center pb-1 font-semibold capitalize text-md">
-          Course
-        </p>
-        <SelectCourse
-          handleSelcetCourse={props.handleSelcetCourse}
-          handleOpen={props.handleOpen}
-          dropdownOpen={props.dropdownOpen}
-          selectedCourse={props.selectedCourse}
-          courses={props.courses}
-        />
+      <div className="py-2 flex justify-between">
+        <div>
+          <p className="flex items-center pb-1 font-semibold capitalize text-md">
+            Course
+          </p>
+          <SelectCourse
+            handleSelcetCourse={props.handleSelcetCourse}
+            handleOpen={props.handleOpen}
+            dropdownOpen={props.dropdownOpen}
+            selectedCourse={props.selectedCourse}
+            courses={props.courses}
+          />
+        </div>
+        <div>
+             
+        </div>
       </div>
       <form action="post" onSubmit={hadleForm}>
         <div>

@@ -1,6 +1,6 @@
 import React from "react";
 
-export const Question = ({
+const Question = ({
   question,
   isActive,
   index,
@@ -23,15 +23,17 @@ export const Question = ({
           className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-xs font-medium ${
             isActive
               ? "border-white bg-white text-blue-600"
-              : isAnswered !== undefined
+              : isAnswered
               ? "border-blue-600 bg-blue-600 text-white"
               : "border-blue-400 text-blue-600"
           }`}
         >
-          {isAnswered !== undefined ? "✓" : index + 1}
+          {isAnswered ? "✓" : index + 1}
         </div>
         <p className="text-sm text-pretty line-clamp-2">{question}</p>
       </div>
     </div>
   );
 };
+
+export default Question;

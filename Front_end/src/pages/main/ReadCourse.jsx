@@ -1,25 +1,19 @@
-import { useParams } from "react-router-dom";
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bookmark } from "lucide-react";
-import useCustomQuery from "../../hooks/Query/useCustomQuery";
-import Button from "../../components/common/Button/Button";
+import LinearProgress from "@mui/material/LinearProgress";
+
+import { useParams } from "react-router-dom";
+
+import ReadCourseSkeleton from "../../components/learn/ReadCourseSkeleton";
+import { useCourseContext } from "../../store/course/course-context";
 import api from "../../services/api";
-import MarkdownRenderer from "../../components/markdown/MarkdownRenderer ";
-import CourseProgress from "../../components/common/progress/CourseProgess";
-import CustomizedProgressBars from "../../components/common/progress/LinearProgress";
-import { ClipLoader } from "react-spinners";
-import { useLessonContext } from "../../store/course/lesson-context";
 
 const ReadCourse = () => {
   const { slug } = useParams();
-  const { lesson, handleLesson } = useLessonContext();
-
-  const [lessonId, setLessonId] = useState(null);
-
   const queryClient = useQueryClient();
 
-  const { data, error } = useQuery({
+  const { lesson, handleLesson, course, handleCourse } = useCourseContext();
+
+  const { data } = useQuery({
     queryKey: ["courseDetail", { slug }],
     queryFn: ({ queryKey }) => {
       return api.get(`/api/Enrollments/${queryKey[1].slug}`);
@@ -32,6 +26,7 @@ const ReadCourse = () => {
         const lessonIndex = chapter.subChapters.findIndex(
           (lesson, i) => lesson.isCurrentCourse === true
         );
+
         if (lessonIndex !== -1) {
           activeLesson = chapter.subChapters[lessonIndex];
         }
@@ -39,9 +34,34 @@ const ReadCourse = () => {
 
       !lesson && handleLesson(activeLesson);
 
+      course?.id !== data?.course?.id &&
+        handleCourse({
+          id: data?.course?.id,
+          title: data?.course?.title,
+          description: data?.course.description,
+          progress: data?.course?.courseProgress,
+        });
+
       return data;
     },
   });
+
+  const AllLesson = [];
+
+  data?.courseData?.forEach((chapter) =>
+    AllLesson.push(...chapter.subChapters)
+  );
+
+  let isPreviousExists, isNextExists;
+
+  if (AllLesson.length > 0) {
+    const currentLessonIndex = AllLesson.findIndex(
+      (sub) => sub.id === lesson?.id
+    );
+
+    isPreviousExists = currentLessonIndex !== 0;
+    isNextExists = currentLessonIndex !== AllLesson.length - 1;
+  }
 
   const { mutate } = useMutation({
     mutationKey: ["courseMutation", { id: data?.course?.id }],
@@ -54,7 +74,16 @@ const ReadCourse = () => {
       queryClient.setQueryData(["courseDetail", { slug }], (oldData) => {
         const old = { ...oldData };
         const course = old?.data?.data?.course || {};
-        const courseData = old?.data?.data?.courseData || {};
+        let courseData = old?.data?.data?.courseData || {};
+
+        courseData = courseData.map((chat) => {
+          const subChapter = chat?.subChapters.find(
+            (sub) => sub.id === variables.subChapterId
+          );
+          if (subChapter) subChapter.completed = variables.completed;
+
+          return chat;
+        });
 
         return {
           ...oldData,
@@ -90,12 +119,18 @@ const ReadCourse = () => {
     onError: (error, variables, context) => {
       queryClient.setQueryData(["courseDetail", { slug }], () => context.prev);
     },
+    onSuccess: () => {
+      handleCourse({
+        title: data?.course?.title,
+        description: data?.course.description,
+        progress: data?.course?.courseProgress,
+      });
+    },
   });
 
   const handleQuetionCatch = (lesson) => {
     queryClient.setQueryData(["courseDetail", { slug }], (oldData) => {
       const old = { ...oldData };
-      const course = old?.data?.data?.course || {};
       const courseData = old?.data?.data?.courseData || {};
       handleLesson(lesson);
       return {
@@ -121,86 +156,72 @@ const ReadCourse = () => {
   const handleOnChange = (subChapterId, completed) =>
     mutate({ subChapterId, completed });
 
+  console.log(course);
+
   return (
     <div>
-      <div className="my-8 mx-4">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2 text-balance">
-          {data?.course?.title}
-        </h1>
-        <p className="text-muted-foreground mb-4 text-pretty">
-          {data?.course?.description}
-        </p>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Course Progress</span>
-            <span>
-              {data?.course?.completedLesson} of {data?.course?.totalLesson}{" "}
-              sections
-            </span>
-          </div>
-          <CustomizedProgressBars
-            value={data?.course?.courseProgress}
-            className="h-2"
-          />
-        </div>
-      </div>
-
       <div className="flex h-[88.5vh]">
-        <div className=" flex-1/3 flex overflow-y-scroll  flex-col p-2 gap-2 bg-gray-50 border-r border-gray-200 ">
-          <h3 className="capitalize text-md font-semibold p-2">
+        <div className="flex flex-col gap-2 p-2 border-b border-blue-200 bg-blue-50">
+          <h3 className="p-2 font-semibold capitalize text-md">
             Course contents
           </h3>
-          {data?.courseData?.map((chapter) => (
-            <div className="capitalize  text-[#112A46] mb-2">
-              <h3 className="text-xl pl-3 pb-3 truncate  font-semibold">
-                {chapter.title}
-              </h3>
-              <ul className="list-disc flex flex-col gap-1">
-                {chapter?.subChapters?.map((les, i) => (
-                  <li
-                    key={les.id}
-                    className={` list-none  pl-3 flex gap-2 cursor-pointer delay-100 ${
-                      lesson?.id === les.id
-                        ? "bg-blue-500 hover:bg-blue-600  text-white "
-                        : "hover:bg-gray-300"
-                    }`}
-                  >
-                    <input
-                      className="accent-green-600 cursor-pointer outline-green-600 w-4 h-auto"
-                      style={{
-                        accentColor: "green",
-                        color: "green",
-                        border: "2px solid green",
-                      }}
-                      type="checkbox"
-                      name="completed"
-                      defaultChecked={les.completed === "COMPLETED"}
-                      onClick={(e) => {
-                        setLessonId(les.id);
-                        if (e.target.checked) {
-                          handleOnChange(les.id, "COMPLETED");
-                        } else {
-                          handleOnChange(les.id, "IN_PROGRESS");
-                        }
-                      }}
-                    />
-
-                    <span
-                      className="truncate ml-2 block w-full"
+          <div className="overflow-y-scroll">
+            {data?.courseData?.map((chapter) => (
+              <div className="capitalize text-[#112A46] mb-2">
+                <h3 className="pb-3 pl-3 text-xl font-semibold truncate">
+                  {chapter.title}
+                </h3>
+                <ul className="flex flex-col gap-2 list-disc">
+                  {chapter?.subChapters?.map((les, i) => (
+                    <li
+                      key={les.id}
                       onClick={() => handleQuetionCatch(les)}
+                      className={`w-full text-left flex gap-2 items-center  p-2 rounded-lg border transition-colors ${
+                        lesson?.id === les.id
+                          ? "border-blue-600 bg-blue-600  text-white"
+                          : "border-blue-400 cursor-pointer  bg-blue-50 hover:bg-blue-100 text-blue-800"
+                      }`}
                     >
-                      {les.title}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          (les.completed === "IN_PROGRESS" || !les.completed) &&
+                            handleOnChange(les.id, "COMPLETED");
+                          les.completed === "COMPLETED" &&
+                            handleOnChange(les.id, "IN_PROGRESS");
+                        }}
+                        className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-xs font-medium ${
+                          les.completed === "COMPLETED"
+                            ? lesson.id === les.id
+                              ? "border-blue-600 bg-white text-blue-600"
+                              : "bg-blue-600 border-blue-600 text-white"
+                            : lesson.id === les.id
+                            ? "border-white"
+                            : "border-blue-400"
+                        }`}
+                      >
+                        {les.completed === "COMPLETED" ? "✓" : null}
+                      </div>
+                      <p
+                        onClick={() => handleQuetionCatch(les)}
+                        className="text-sm text-pretty line-clamp-2"
+                      >
+                        {les.title}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="w-full flex flex-col mx-8 rounded-md  border-gray-200 border shadow shadow-gray-200  p-8 gap-4 overflow-y-scroll  text-xl">
+        <div className="flex-1 w-full gap-4 p-8 mx-8 overflow-y-scroll text-xl bg-white shadow-xl rounded-2xl">
           <ReadCourseSkeleton
             id={lesson && lesson?.id}
             enrollmentId={data?.enrollment.id}
+            title={lesson && lesson.title}
+            isNextExists={isNextExists}
+            isPreviousExists={isPreviousExists}
           />
         </div>
       </div>
@@ -209,89 +230,3 @@ const ReadCourse = () => {
 };
 
 export default ReadCourse;
-
-const ReadCourseSkeleton = ({ id, enrollmentId }) => {
-  const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery({
-    queryKey: ["courseContent", id],
-    queryFn: ({ queryKey }) => {
-      const [, id] = queryKey;
-      return api.get(`/api/sub-chapter/file/${id}`);
-    },
-    staleTime: 0,
-  });
-
-  const { data: isInBookmark } = useQuery({
-    queryKey: ["getBookmarks", enrollmentId, id],
-    queryFn: ({ queryKey }) => {
-      const [, enrollmentId, id] = queryKey;
-      return api.get(`/api/bookmarks/${enrollmentId}/${id}`);
-    },
-    staleTime: 0,
-    select: (data) => {
-      if (typeof data?.data?.data === "boolean") {
-        return data?.data?.data;
-      }
-      return data?.data;
-    },
-  });
-
-  const { mutate, error } = useMutation({
-    mutationKey: ["toggleBookmark"],
-    mutationFn: (data) => api.post(`/api/bookmarks/toggle`, data),
-    onMutate: () => {
-      const context = queryClient.getQueryData([
-        "getBookmarks",
-        enrollmentId,
-        id,
-      ]);
-      queryClient.setQueryData(["getBookmarks", enrollmentId, id], (old) => ({
-        ...old,
-        data: !isInBookmark,
-      }));
-      return context;
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <ClipLoader color="blue" size={50} />
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="flex items-center justify-end">
-        {/* <i
-          onClick={() => mutate({ subChapterId: id, enrollmentId })}
-          className={`fa-solid text-2xl cursor-pointer ${
-            isInBookmark ? "text-blue-500" : "text-gray-500"
-          } fa-bookmark`}
-        ></i> */}
-        <Bookmark
-          color={isInBookmark ? "blue" : "gray"}
-          fill={isInBookmark ? "blue" : "transparent"}
-          onClick={() => mutate({ subChapterId: id, enrollmentId })}
-          className="cursor-pointer"
-        />
-      </div>
-      <MarkdownRenderer content={data?.data} />
-      <PageButtons />
-    </>
-  );
-};
-
-const PageButtons = () => (
-  <div className="flex items-center justify-between">
-    <Button className="bg-blue-700 capitalize py-2 px-4 text-[16px] text-white">
-      <i className="fa-solid fa-angle-left text-white text-md pr-1"></i>
-      Previous
-    </Button>
-    <Button className="bg-blue-700 capitalize py-2 px-4 text-[16px] text-white">
-      Next
-      <i className="fa-solid fa-angle-right text-white text-md pl-1"></i>
-    </Button>
-  </div>
-);

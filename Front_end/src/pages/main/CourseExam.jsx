@@ -1,13 +1,36 @@
+import { data, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+
 import Button from "../../components/common/Button/Button";
-import QuestionSideBar, {
-  questions,
-} from "../../components/exam/sidbar/SideBar";
+import QuestionSideBar from "../../components/exam/sidbar/SideBar";
+import api from "../../services/api";
 
 const CourseExam = () => {
+  const { slug } = useParams();
+  const [questions, setQuestions] = useState(undefined);
+  const [selectedQuestion, setSelectedQuestion] = useState(undefined);
+
+  const { data } = useQuery({
+    queryKey: ["questions", { slug }],
+    queryFn: ({ queryKey }) =>
+      api.get(`/api/course/${queryKey[1].slug}/questions`),
+    select: (response) => {
+      const questionData = response?.data?.data;
+      !questions && setQuestions(questionData);
+      !selectedQuestion && setSelectedQuestion(questionData[0]);
+      return questionData;
+    },
+  });
+
   return (
     <div className="h-[calc(100vh-72px)]">
       <div className="flex h-full">
-        <QuestionSideBar />
+        <QuestionSideBar
+          questions={questions}
+          activeQuestion={selectedQuestion}
+          handleActiveQuestion={(question) => setSelectedQuestion(question)}
+        />
         <div className="flex flex-col flex-1">
           {/* Question Header */}
           <div className="p-6 border-b border-blue-200 bg-blue-50">
@@ -18,17 +41,34 @@ const CourseExam = () => {
               <span className="text-sm text-blue-600">{60}% complete</span>
             </div>
             <h3 className="text-xl font-semibold text-blue-900 text-balance">
-              Question Content
+              {selectedQuestion?.question}
             </h3>
           </div>
           <div className="flex-1 p-6 overflow-y-auto">
             <div className="max-w-2xl space-y-3">
-              {questions[0].options.map((option, index) => (
+              {selectedQuestion?.options.map((option, index) => (
                 <button
                   key={index}
-                  // onClick={() => handleAnswerSelect(currentQuestion.id, index)}
+                  onClick={() => {
+                    const prev = [...questions];
+
+                    const questionIndex = prev.findIndex(
+                      (que) => que.id === selectedQuestion.id
+                    );
+                    const question = prev[questionIndex];
+                    question.isAnswered = true;
+                    question.options = question.options.map((opt) => {
+                      if (opt.id === option.id) {
+                        return { ...opt, isAnswer: true };
+                      }
+                      return { ...opt, isAnswer: false };
+                    });
+
+                    setQuestions(prev);
+                    setSelectedQuestion(question);
+                  }}
                   className={`w-full text-left p-4 rounded-lg border transition-colors ${
-                    false
+                    option?.isAnswer
                       ? "border-blue-500 bg-blue-50 text-blue-900"
                       : "border-blue-200 hover:border-blue-400 hover:bg-blue-50"
                   }`}
@@ -36,16 +76,18 @@ const CourseExam = () => {
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
-                        false === index
+                        option?.isAnswer
                           ? "border-blue-600 bg-blue-600"
                           : "border-blue-300"
                       }`}
                     >
-                      {false === index && (
+                      {option?.isAnswer && (
                         <div className="w-full h-full scale-50 bg-white rounded-full" />
                       )}
                     </div>
-                    <span className="text-blue-900 text-pretty">{option}</span>
+                    <span className="text-blue-900 text-pretty">
+                      {option.text}
+                    </span>
                   </div>
                 </button>
               ))}
