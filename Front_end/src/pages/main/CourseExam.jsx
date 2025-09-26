@@ -5,23 +5,30 @@ import { useState } from "react";
 import Button from "../../components/common/Button/Button";
 import QuestionSideBar from "../../components/exam/sidbar/SideBar";
 import api from "../../services/api";
+import { useCourseContext } from "../../store/course/course-context";
 
 const CourseExam = () => {
-  const { slug } = useParams();
   const [questions, setQuestions] = useState(undefined);
   const [selectedQuestion, setSelectedQuestion] = useState(undefined);
+  const { examId } = useCourseContext();
+
+  console.log(examId);
 
   const { data } = useQuery({
-    queryKey: ["questions", { slug }],
+    queryKey: ["questions", examId],
     queryFn: ({ queryKey }) =>
-      api.get(`/api/course/${queryKey[1].slug}/questions`),
+      api.get(`/api/exam/${queryKey[1]}/session/current`),
     select: (response) => {
       const questionData = response?.data?.data;
-      !questions && setQuestions(questionData);
-      !selectedQuestion && setSelectedQuestion(questionData[0]);
+      console.log(questionData.questions[0]);
+      !questions && setQuestions(questionData.questions);
+      !selectedQuestion && setSelectedQuestion(questionData.questions[0]);
       return questionData;
     },
+    enabled: examId !== undefined,
   });
+
+  console.log(selectedQuestion);
 
   return (
     <div className="h-[calc(100vh-72px)]">
@@ -41,7 +48,7 @@ const CourseExam = () => {
               <span className="text-sm text-blue-600">{60}% complete</span>
             </div>
             <h3 className="text-xl font-semibold text-blue-900 text-balance">
-              {selectedQuestion?.question}
+              {selectedQuestion?.questionText}
             </h3>
           </div>
           <div className="flex-1 p-6 overflow-y-auto">
