@@ -26,9 +26,14 @@ const Lessons = () => {
 
   const { data: courseData } = useQuery({
     queryKey: ["courses"],
-    queryFn: () => api.get("/api/course"),
-    select: (data) => data.data,
+    queryFn: () => api.get("/api/course/user"),
+    select: (data) => {
+      console.log(data.data);
+      return data.data;
+    },
   });
+
+  console.log({ courseData });
 
   const { data: lessonsData } = useQuery({
     queryKey: ["courseLessons", { id: selectedCourse }],
@@ -93,7 +98,7 @@ const Lessons = () => {
 `}
             >
               <option value="">-- Select a course --</option>
-              {courseData?.data?.map((course) => (
+              {courseData?.data.map((course) => (
                 <option value={course.id} key={course.id}>
                   {course.title}
                 </option>

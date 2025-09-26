@@ -3,6 +3,7 @@ import Button from "../common/Button/Button";
 import { Link } from "react-router-dom";
 
 const SingleCours = ({ id, title, slug, description, thumbnail }) => {
+  console.log({ thumbnail });
   return (
     <Link
       to={`/course/${slug}`}
@@ -11,7 +12,10 @@ const SingleCours = ({ id, title, slug, description, thumbnail }) => {
     >
       <div className="relative overflow-hidden">
         <img
-          src={"http://localhost:5000/uploads/" + thumbnail.split("\\")[1]}
+          // src={"http://localhost:5000/uploads/" + thumbnail.split("\\")[1]}
+          src={
+            "https://www.freepik.com/free-psd/graphic-design-landing-page-template_14725123.htm#fromView=keyword&page=1&position=0&uuid=2d9e9796-4000-4e95-a406-7171fa5cf7dc&query=Web+design+course"
+          }
           alt={title}
           className="course-img w-full h-48 object-cover"
         />

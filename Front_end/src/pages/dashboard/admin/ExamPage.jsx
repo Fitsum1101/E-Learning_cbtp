@@ -1,6 +1,100 @@
-import React from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Trash } from "lucide-react";
+
+import api from "../../../services/api";
+import Button from "../../../components/common/Button/Button";
+
+const filterObject = (prev, key, value) => ({ ...prev, [key]: value });
 
 const ExamPage = () => {
+  const queryClient = useQueryClient();
+
+  const [urlElemets, setUrlElements] = useState({
+    courseId: undefined,
+    searchParams: "",
+    attempt: 1,
+  });
+
+  const [questionsId, setQuestionsId] = useState([]);
+
+  const { data: courseData } = useQuery({
+    queryKey: ["courses"],
+    queryFn: () => api.get("/api/course/user"),
+
+    select: (data) => {
+      return data.data;
+    },
+  });
+
+  const { data: questions, isLoading } = useQuery({
+    queryKey: ["courses", urlElemets],
+    queryFn: () =>
+      api.get(
+        `api/questions/course/${urlElemets.courseId}?search=${urlElemets.searchParams}&attempt=${urlElemets.attempt}`
+      ),
+    select: (data) => {
+      return data.data.data;
+    },
+  });
+
+  const { data: examQuestions } = useQuery({
+    queryKey: ["examCourses", urlElemets],
+    queryFn: () =>
+      api.get(
+        `api/questions/exam/course/${urlElemets.courseId}?search=${urlElemets.searchParams}&attempt=${urlElemets.attempt}`
+      ),
+    select: (data) => {
+      return data.data.data;
+    },
+  });
+
+  const {
+    mutate: addQuestions,
+    isPending,
+    error,
+  } = useMutation({
+    mutationKey: ["fillExamQuestions"],
+    mutationFn: (data) =>
+      api.post(`api/exam/course/${urlElemets.courseId}`, data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["courses", urlElemets],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["examCourses", urlElemets],
+        exact: true,
+      });
+    },
+    onError: (error) => {
+      console.log(error);
+    },
+  });
+
+  const { mutate: deleteQuestion } = useMutation({
+    mutationKey: ["deleteExamQuestion"],
+    mutationFn: (id) => api.delete(`api/exam/question/${id}`),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["courses", urlElemets],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["examCourses", urlElemets],
+        exact: true,
+      });
+    },
+  });
+
+  const handleQuestions = () => {
+    if (questionsId.length == 0) return;
+    addQuestions({ questionsId, attempt: +urlElemets.attempt });
+    setQuestionsId([]);
+  };
+
+  const isExamQuestionsExists = examQuestions && examQuestions.length > 0;
+
   return (
     <div className="flex-1">
       <header className="bg-white shadow-sm p-4">
@@ -13,21 +107,37 @@ const ExamPage = () => {
               <label className="block text-gray-700 font-medium mb-2">
                 Select Course
               </label>
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>Mathematics 101</option>
-                <option>Physics 201</option>
-                <option>Chemistry 301</option>
-                <option>Biology 401</option>
+              <select
+                name="courseId"
+                onChange={(e) =>
+                  setUrlElements((prev) =>
+                    filterObject(prev, "courseId", e.target.value)
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {courseData?.data.map((course) => (
+                  <option value={course.id} key={course.id}>
+                    {course.title}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="block text-gray-700 font-medium mb-2">
                 Attempt Number
               </label>
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option>First Attempt</option>
-                <option>Second Attempt</option>
-                <option>Final Attempt</option>
+              <select
+                onChange={(e) =>
+                  setUrlElements((prev) =>
+                    filterObject(prev, "attempt", e.target.value)
+                  )
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={1}>First Attempt</option>
+                <option value={2}>Second Attempt</option>
+                <option value={3}>Final Attempt</option>
               </select>
             </div>
           </div>
@@ -41,6 +151,11 @@ const ExamPage = () => {
               <div className="relative">
                 <input
                   type="text"
+                  onChange={(e) =>
+                    setUrlElements((prev) =>
+                      filterObject(prev, "searchParams", e.target.value.trim())
+                    )
+                  }
                   placeholder="Search questions..."
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -50,112 +165,88 @@ const ExamPage = () => {
                 ></i>
               </div>
             </div>
-            <div className="max-h-96 overflow-y-auto">
-              <div className="space-y-2">
-                <div className="p-3 border border-gray-200 rounded-lg question-item flex items-center">
-                  <input
-                    type="checkbox"
-                    className="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="font-medium">What is the derivative of x²?</p>
-                    <p className="text-sm text-gray-500">Calculus | 5 points</p>
-                  </div>
-                </div>
-                <div className="p-3 border border-gray-200 rounded-lg question-item flex items-center">
-                  <input
-                    type="checkbox"
-                    className="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="font-medium">
-                      Solve the equation: 2x + 5 = 15
-                    </p>
-                    <p className="text-sm text-gray-500">Algebra | 3 points</p>
-                  </div>
-                </div>
-                <div className="p-3 border border-gray-200 rounded-lg question-item flex items-center">
-                  <input
-                    type="checkbox"
-                    className="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="font-medium">
-                      What is the value of π to two decimal places?
-                    </p>
-                    <p className="text-sm text-gray-500">Geometry | 2 points</p>
-                  </div>
-                </div>
-                <div className="p-3 border border-gray-200 rounded-lg question-item flex items-center">
-                  <input
-                    type="checkbox"
-                    className="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="font-medium">
-                      Explain the Pythagorean theorem
-                    </p>
-                    <p className="text-sm text-gray-500">Geometry | 4 points</p>
-                  </div>
-                </div>
-                <div className="p-3 border border-gray-200 rounded-lg question-item flex items-center">
-                  <input
-                    type="checkbox"
-                    className="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="font-medium">
-                      What is the quadratic formula?
-                    </p>
-                    <p className="text-sm text-gray-500">Algebra | 3 points</p>
-                  </div>
-                </div>
+            <div>
+              <div className="h-96 overflow-y-auto">
+                {questions && questions.length > 0 ? (
+                  !isLoading ? (
+                    questions.map((question) => (
+                      <div
+                        key={question.id}
+                        className="p-3 border border-gray-200 rounded-lg question-item flex items-center"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={questionsId.includes(question.id)}
+                          onClick={() =>
+                            setQuestionsId((prev) => {
+                              let newQuestionsId = [...prev];
+                              const index = newQuestionsId.findIndex(
+                                (id) => id === question.id
+                              );
+                              if (index !== -1)
+                                newQuestionsId = newQuestionsId.filter(
+                                  (id) => id !== question.id
+                                );
+                              else newQuestionsId.push(question.id);
+                              return newQuestionsId;
+                            })
+                          }
+                          className="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <div>
+                          <p className="font-medium">{question.question}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <h1 className="text-blue-600 flex h-full items-center capitalize  justify-center">
+                      loading...
+                    </h1>
+                  )
+                ) : (
+                  <h1 className="bg-blue-300 h-[40vh] flex items-center justify-center capitalize  text-white">
+                    no question yet
+                  </h1>
+                )}
               </div>
+              <Button
+                disabled={isPending || questionsId.length === 0}
+                className="w-full hover:bg-blue-700 py-1 bg-blue-600 text-white"
+                onClick={handleQuestions}
+              >
+                Add Questions
+              </Button>
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              Selected Questions
+            <h2 className="text-lg font-semibold text-gray-800 ">
+              Exam Questions
             </h2>
-            <div className="max-h-96 overflow-y-auto">
-              <div className="space-y-2">
-                <div className="p-3 border border-gray-200 rounded-lg selected-question flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">
-                      Find the limit of (sin x)/x as x approaches 0
-                    </p>
-                    <p className="text-sm text-gray-500">Calculus | 5 points</p>
-                  </div>
-                  <button className="text-red-500 hover:text-red-700">
-                    <i data-feather="trash-2"></i>
-                  </button>
-                </div>
-                <div className="p-3 border border-gray-200 rounded-lg selected-question flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">
-                      Calculate the area of a circle with radius 5
-                    </p>
-                    <p className="text-sm text-gray-500">Geometry | 4 points</p>
-                  </div>
-                  <button className="text-red-500 hover:text-red-700">
-                    <i data-feather="trash-2"></i>
-                  </button>
-                </div>
-                <div className="p-3 border border-gray-200 rounded-lg selected-question flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Differentiate y = e^x</p>
-                    <p className="text-sm text-gray-500">Calculus | 3 points</p>
-                  </div>
-                  <button className="text-red-500 hover:text-red-700">
-                    <i data-feather="trash-2"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 text-right">
+            <div className="mb-4">
               <p className="text-gray-700">
                 Total Points: <span className="font-bold">12</span>
               </p>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              <div className="space-y-2">
+                {isExamQuestionsExists &&
+                  examQuestions.map((exam) => (
+                    <div className="p-3 border border-gray-200 rounded-lg selected-question flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{exam.question}</p>
+                      </div>
+                      <Trash
+                        onClick={() => deleteQuestion(exam.id)}
+                        className="w-4 cursor-pointer h-4 text-red-600"
+                      />
+                    </div>
+                  ))}
+                {!isExamQuestionsExists && (
+                  <h1 className="bg-blue-300 h-[40vh] flex items-center justify-center capitalize  text-white">
+                    No exam question yet
+                  </h1>
+                )}
+              </div>
             </div>
           </div>
         </div>

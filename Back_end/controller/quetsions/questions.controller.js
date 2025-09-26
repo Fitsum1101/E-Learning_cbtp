@@ -249,3 +249,72 @@ exports.getQuestions = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getQuestionByCourseId = async (req, res, next) => {
+  const { courseId } = req.params;
+
+  const search = req.query.search || "";
+  const attempt = +req.query.attempt || 1;
+
+  try {
+    const questionsIds = await db.examQuestions.findMany({
+      omit: {
+        id: true,
+        attempt: true,
+        examId: true,
+      },
+      where: {
+        attempt,
+        question: {
+          courseId,
+        },
+      },
+    });
+
+    const questions = await db.question.findMany({
+      where: {
+        courseId,
+        id: {
+          notIn: questionsIds.map((que) => que.questionId),
+        },
+        question: {
+          contains: search,
+        },
+      },
+    });
+
+    res.status(200).json({
+      sucess: true,
+      data: questions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getQuestionInExam = async (req, res, next) => {
+  const { courseId } = req.params;
+
+  const attempt = +req.query.attempt || 1;
+  const search = +req.query.search || 1;
+
+  try {
+    const questions = await db.examQuestions.findMany({
+      where: {
+        attempt,
+        question: {
+          courseId,
+        },
+      },
+      include: {
+        question: true,
+      },
+    });
+    res.status(200).json({
+      sucess: true,
+      data: questions.question,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -35,8 +35,8 @@ CREATE TABLE `Course` (
     `title` VARCHAR(191) NOT NULL,
     `slug` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NOT NULL,
-    `courselevel` VARCHAR(191) NOT NULL DEFAULT 'Beginner',
-    `thumbnail` VARCHAR(191) NULL,
+    `level` VARCHAR(191) NOT NULL DEFAULT 'Beginner',
+    `thumbnail` VARCHAR(191) NOT NULL,
     `published` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -63,6 +63,7 @@ CREATE TABLE `SubChapter` (
     `id` VARCHAR(191) NOT NULL,
     `title` VARCHAR(191) NOT NULL,
     `fileUrl` VARCHAR(191) NOT NULL,
+    `minute` INTEGER NOT NULL,
     `order` INTEGER NOT NULL,
     `chapterId` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -93,10 +94,85 @@ CREATE TABLE `Enrollment` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `Quiz` (
+CREATE TABLE `Exam` (
     `id` VARCHAR(191) NOT NULL,
-    `title` VARCHAR(191) NOT NULL,
-    `courseId` VARCHAR(191) NOT NULL,
+    `duration` INTEGER NOT NULL DEFAULT 20,
+    `passingScore` INTEGER NOT NULL DEFAULT 20,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ExamTaker` (
+    `id` VARCHAR(191) NOT NULL,
+    `userId` VARCHAR(191) NOT NULL,
+    `examId` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ExamSession` (
+    `id` VARCHAR(191) NOT NULL,
+    `examTakerId` VARCHAR(191) NOT NULL,
+    `startedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `attempt` INTEGER NOT NULL DEFAULT 1,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ExamAnswer` (
+    `id` VARCHAR(191) NOT NULL,
+    `examId` VARCHAR(191) NOT NULL,
+    `questionId` VARCHAR(191) NOT NULL,
+    `optionId` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Bookmark` (
+    `id` VARCHAR(191) NOT NULL,
+    `enrollmentId` VARCHAR(191) NOT NULL,
+    `subChapterId` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `Bookmark_enrollmentId_subChapterId_key`(`enrollmentId`, `subChapterId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Progress` (
+    `id` VARCHAR(191) NOT NULL,
+    `enrollmentId` VARCHAR(191) NOT NULL,
+    `subChapterId` VARCHAR(191) NOT NULL,
+    `watchedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `completed` ENUM('ACTIVE', 'IN_PROGRESS', 'COMPLETED') NOT NULL DEFAULT 'IN_PROGRESS',
+    `watchedAgain` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `AvatarCategory` (
+    `id` VARCHAR(191) NOT NULL,
+    `style` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Avatar` (
+    `id` VARCHAR(191) NOT NULL,
+    `seed` VARCHAR(191) NOT NULL,
+    `styleId` VARCHAR(191) NOT NULL,
+    `courseComplete` INTEGER NOT NULL DEFAULT 0,
+    `courseEnrolled` INTEGER NOT NULL DEFAULT 0,
+    `courseCertificates` INTEGER NOT NULL DEFAULT 0,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
@@ -105,9 +181,20 @@ CREATE TABLE `Quiz` (
 -- CreateTable
 CREATE TABLE `Question` (
     `id` VARCHAR(191) NOT NULL,
-    `text` VARCHAR(191) NOT NULL,
-    `quizId` VARCHAR(191) NOT NULL,
+    `question` VARCHAR(191) NOT NULL,
+    `courseId` VARCHAR(191) NOT NULL,
 
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ExamQuestions` (
+    `id` VARCHAR(191) NOT NULL,
+    `examId` VARCHAR(191) NOT NULL,
+    `questionId` VARCHAR(191) NOT NULL,
+    `attempt` INTEGER NOT NULL DEFAULT 1,
+
+    UNIQUE INDEX `ExamQuestions_examId_questionId_key`(`examId`, `questionId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -117,17 +204,6 @@ CREATE TABLE `Option` (
     `text` VARCHAR(191) NOT NULL,
     `isCorrect` BOOLEAN NOT NULL DEFAULT false,
     `questionId` VARCHAR(191) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `Progress` (
-    `id` VARCHAR(191) NOT NULL,
-    `userId` VARCHAR(191) NOT NULL,
-    `subChapterId` VARCHAR(191) NOT NULL,
-    `watchedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `completed` BOOLEAN NOT NULL DEFAULT true,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -179,19 +255,37 @@ ALTER TABLE `Enrollment` ADD CONSTRAINT `Enrollment_userId_fkey` FOREIGN KEY (`u
 ALTER TABLE `Enrollment` ADD CONSTRAINT `Enrollment_courseId_fkey` FOREIGN KEY (`courseId`) REFERENCES `Course`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Quiz` ADD CONSTRAINT `Quiz_courseId_fkey` FOREIGN KEY (`courseId`) REFERENCES `Course`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ExamTaker` ADD CONSTRAINT `ExamTaker_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Question` ADD CONSTRAINT `Question_quizId_fkey` FOREIGN KEY (`quizId`) REFERENCES `Quiz`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ExamTaker` ADD CONSTRAINT `ExamTaker_examId_fkey` FOREIGN KEY (`examId`) REFERENCES `Exam`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Option` ADD CONSTRAINT `Option_questionId_fkey` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Bookmark` ADD CONSTRAINT `Bookmark_enrollmentId_fkey` FOREIGN KEY (`enrollmentId`) REFERENCES `Enrollment`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Progress` ADD CONSTRAINT `Progress_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Bookmark` ADD CONSTRAINT `Bookmark_subChapterId_fkey` FOREIGN KEY (`subChapterId`) REFERENCES `SubChapter`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Progress` ADD CONSTRAINT `Progress_enrollmentId_fkey` FOREIGN KEY (`enrollmentId`) REFERENCES `Enrollment`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Progress` ADD CONSTRAINT `Progress_subChapterId_fkey` FOREIGN KEY (`subChapterId`) REFERENCES `SubChapter`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Avatar` ADD CONSTRAINT `Avatar_styleId_fkey` FOREIGN KEY (`styleId`) REFERENCES `AvatarCategory`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Question` ADD CONSTRAINT `Question_courseId_fkey` FOREIGN KEY (`courseId`) REFERENCES `Course`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ExamQuestions` ADD CONSTRAINT `ExamQuestions_examId_fkey` FOREIGN KEY (`examId`) REFERENCES `Exam`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ExamQuestions` ADD CONSTRAINT `ExamQuestions_questionId_fkey` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Option` ADD CONSTRAINT `Option_questionId_fkey` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Rating` ADD CONSTRAINT `Rating_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

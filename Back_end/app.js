@@ -16,6 +16,8 @@ const avatarRouter = require("./routes/avatar/Avatar.route");
 const progressRouter = require("./routes/progress/progress.routes");
 const bookmarkRoutes = require("./routes/Bookmarks/bookmark.routes");
 const questionRouter = require("./routes//questions/questions.route");
+const examRoutes = require("./routes/exam/exam.routes");
+// const db = require("./config/db");
 
 const app = express();
 
@@ -37,6 +39,7 @@ app.use("/api", avatarRouter);
 app.use("/api", progressRouter);
 app.use("/api", bookmarkRoutes);
 app.use("/api", questionRouter);
+app.use("/api", examRoutes);
 
 app.use((err, req, res, next) => {
   console.error("from express error handler", err);

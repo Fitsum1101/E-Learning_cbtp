@@ -3,6 +3,7 @@ const slugify = require("../../util/slugfy");
 const validate = require("../../util/validate.util");
 const { deleteFile } = require("../../util/removeFile");
 const path = require("path");
+const { appendFile } = require("fs");
 
 const makePath = (filePath) => path.join(require.main.path, filePath);
 
@@ -18,6 +19,8 @@ exports.getAllCourses = async (req, res, next) => {
 
     let nextPage = page >= endPage ? 0 : page + 1;
     let prevPage = page === 1 ? 0 : page - 1;
+
+    console.log({ skip, limit });
 
     const courses = await db.course.findMany({
       skip,
@@ -211,6 +214,8 @@ exports.deleteCourse = async (req, res, next) => {
 exports.getCourseBySlug = async (req, res, next) => {
   try {
     const { slug } = req.params;
+
+    console.log({ slug });
 
     const isSlugExists = await db.course.findUnique({
       where: {
@@ -420,6 +425,71 @@ exports.getCourseAnalytics = async (req, res, next) => {
     res.json({
       success: true,
       data: { ...courseAnalytics },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getCourseQuestions = async (req, res, next) => {
+  const { slug } = req.params;
+  const userId = req.user?.id || "1301d38b-2d2d-4649-a003-0c45e912fe8f";
+  try {
+    const isCourseExists = await db.enrollment.findFirst({
+      where: {
+        course: {
+          slug,
+        },
+        userId,
+        completed: false,
+      },
+    });
+    if (!isCourseExists) {
+      return res.status(400).json({
+        message: "course does not exists",
+      });
+    }
+    const questions = await db.question.findMany({
+      where: {
+        course: {
+          slug,
+        },
+      },
+      include: {
+        options: {
+          omit: {
+            isCorrect: true,
+          },
+        },
+      },
+    });
+    res.status(200).json({
+      message: "course questions",
+      data: questions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllUserCourses = async (req, res, next) => {
+  const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
+  try {
+    const courses = await db.course.findMany({
+      where: {
+        adminId: userId,
+      },
+      include: {
+        chapters: {
+          include: {
+            subChapters: true,
+          },
+        },
+      },
+    });
+    res.status(200).json({
+      success: true,
+      data: courses,
     });
   } catch (error) {
     next(error);

@@ -9,17 +9,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role{
-       STUDENT
-       ADMIN
-       SUPER_ADMIN
-}
 
-enum CourseProgressStatus {
-  ACTIVE
-  IN_PROGRESS
-  COMPLETED
-}
 
 model User {
   id            String        @id @default(uuid())
@@ -39,6 +29,7 @@ model User {
   enrollments   Enrollment[]
   ratings       Rating[]
   testimonials  Testimonial[]
+  examTakers    ExamTaker[]
 }
 
 model CourseCategory {
@@ -65,11 +56,12 @@ model Course {
 
   category      CourseCategory @relation(fields: [categoryId], references: [id])
   enrollments   Enrollment[]
-  question   Question[]
+ 
 
   chapters      Chapter[]
   ratings       Rating[]
   testimonials  Testimonial[]
+  questions     Question[]
 }
 
 model Chapter {
@@ -120,6 +112,45 @@ model Enrollment {
   bookmarks  Bookmark[]
 }
 
+model Exam {
+  id             String   @id @default(uuid())
+
+
+  duration       Int      @default(20)
+  passingScore   Int      @default(20)
+  createdAt      DateTime @default(now())
+ 
+  examTakers     ExamTaker[]
+  examQuestions ExamQuestions[]
+}
+
+model ExamTaker{
+  id        String   @id @default(uuid())
+  userId    String
+  examId    String
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  exam      Exam     @relation(fields: [examId], references: [id])
+}
+
+
+model ExamSession {
+ id          String   @id @default(uuid())
+ examTakerId String
+ startedAt   DateTime @default(now())
+ attempt     Int      @default(1)
+
+}
+
+model ExamAnswer {
+  id         String   @id @default(uuid())
+  examId     String
+  questionId String
+  optionId   String
+}
+
 model Bookmark {
   id           String      @id @default(uuid())
   enrollmentId String
@@ -166,12 +197,26 @@ model Avatar {
 model Question {
   id        String     @id @default(uuid())
   question  String
-  courseId  String
+  courseId    String
 
-  
-  course    Course     @relation(fields: [courseId], references: [id])
+ 
+
+  course      Course       @relation(fields: [courseId], references: [id])
+  examQuestions ExamQuestions[]
   options   Option[]
 }
+
+model ExamQuestions{
+  id          String   @id @default(uuid())
+  examId      String
+  questionId  String
+  attempt   Int        @default(1)
+  exam        Exam     @relation(fields: [examId], references: [id])
+  question    Question @relation(fields: [questionId], references: [id])
+
+  @@unique([examId, questionId])
+}
+
 
 model Option {
   id         String    @id @default(uuid())
@@ -208,3 +253,20 @@ model Testimonial {
   course     Course?  @relation(fields: [courseId], references: [id])
 }
 
+enum Role{
+       STUDENT
+       ADMIN
+       SUPER_ADMIN
+}
+
+enum ExamStatus{
+  NOT_TAKEN
+  FAILED
+  PASS
+}
+
+enum CourseProgressStatus {
+  ACTIVE
+  IN_PROGRESS
+  COMPLETED
+}

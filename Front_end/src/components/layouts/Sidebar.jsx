@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 
-const role = "admin";
+const role = "student";
 
 const Sidebar = () => {
   return (

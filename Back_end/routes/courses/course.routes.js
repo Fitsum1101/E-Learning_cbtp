@@ -69,6 +69,8 @@ router.put(
 
 router.get("/course", courseController.getAllCourses);
 
+router.get("/course/user", courseController.getAllUserCourses);
+
 router.get("/course/:slug", courseController.getCourseBySlug);
 
 router.get("/courses/category", courseController.getCourseByCategory);
@@ -83,5 +85,7 @@ router.patch(
 // router.get("/courses/progress", courseController.getCourseProgress);
 
 router.get("/courses/analytics", courseController.getCourseAnalytics);
+
+router.get("/course/:slug/questions", courseController.getCourseQuestions);
 
 module.exports = router;

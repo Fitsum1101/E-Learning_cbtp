@@ -15,3 +15,5 @@ node_modules/
 
 /files
 /generated/prisma
+
+/generated/prisma

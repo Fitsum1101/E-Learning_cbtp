@@ -147,4 +147,14 @@ router.get("/questions", questionController.getQuestions);
 
 router.get("/questions/:id", questionController.getQuestionBy);
 
+router.get(
+  "/questions/course/:courseId",
+  questionController.getQuestionByCourseId
+);
+
+router.get(
+  "/questions/exam/course/:courseId",
+  questionController.getQuestionInExam
+);
+
 module.exports = router;

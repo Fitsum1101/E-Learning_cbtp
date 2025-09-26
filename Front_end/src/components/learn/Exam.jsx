@@ -283,7 +283,7 @@ const Exam = () => {
   );
 };
 
-export default ExamPage;
+export default Exam;
 
 function ExamRules({ icon, title, description }) {
   return (
