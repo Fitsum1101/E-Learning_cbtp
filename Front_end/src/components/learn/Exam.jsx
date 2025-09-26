@@ -10,6 +10,10 @@ import {
   Timer,
   Users,
 } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import api from "../../services/api";
+import { useCourseContext } from "../../store/course/course-context";
 
 const mockExamData = {
   courseTitle: "React Fundamentals",
@@ -98,6 +102,21 @@ const examInfo = [
 ];
 
 const Exam = () => {
+  const { examId } = useParams();
+  const navigate = useNavigate();
+  const { handleExamId } = useCourseContext();
+
+  const { data } = useQuery({
+    queryKey: ["exam-courses", examId],
+    queryFn: ({ queryKey }) => api.get(`api/exam/${queryKey[1]}/start`),
+    select: (response) => response.data.data,
+  });
+
+  const startExam = () => {
+    handleExamId(data.id);
+    navigate(`start`);
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 to-white">
       <div className="w-full max-w-6xl">
@@ -112,27 +131,20 @@ const Exam = () => {
                       <FileText className="w-6 h-6 text-white" />
                     </div>
                     <Badge className="text-white bg-white/20 border-white/30 hover:bg-white/30">
-                      {mockExamData.difficulty}
+                      {data?.level}
                     </Badge>
                   </div>
-                  <h1 className="mb-3 text-3xl font-bold md:text-4xl text-balance">
-                    {mockExamData.examTitle}
+                  <h1 className="mb-3 flex text-3xl font-bold md:text-4xl text-balance">
+                    <BookOpen className="w-5 h-5 ml-2" />
+                    {data?.title}
                   </h1>
-                  <p className="flex items-center gap-2 mb-4 text-xl text-blue-100">
-                    <BookOpen className="w-5 h-5" />
-                    {mockExamData.courseTitle}
-                  </p>
                   <p className="mb-4 text-blue-100 text-pretty">
-                    {mockExamData.courseDescription}
+                    {data?.description}
                   </p>
                   <div className="flex items-center gap-4 text-sm text-blue-100">
                     <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      {mockExamData.instructor}
-                    </div>
-                    <div className="flex items-center gap-2">
                       <Timer className="w-4 h-4" />
-                      {mockExamData.timeLimit} minutes
+                      {data?.duration} minutes
                     </div>
                   </div>
                 </div>
@@ -265,11 +277,13 @@ const Exam = () => {
                 <Button
                   variant="primary"
                   size="lg"
-                  className="flex items-center justify-center px-12 py-4 text-lg font-semibold text-white transition-all duration-200 transform shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:scale-105"
+                  onClick={startExam}
+                  className="flex items-center  justify-center px-12 py-4 text-lg font-semibold text-white transition-all duration-200 transform shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:scale-105"
                 >
                   <FileText className="w-5 h-5 mr-2" />
                   Start Exam Now
                 </Button>
+
                 <div className="max-w-xs text-xs text-blue-500 text-pretty">
                   By starting this exam, you agree to follow all academic
                   integrity guidelines

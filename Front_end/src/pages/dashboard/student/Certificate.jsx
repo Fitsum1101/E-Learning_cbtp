@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import Button from "../../../components/common/Button/Button";
 import {
   Award,
@@ -8,6 +9,8 @@ import {
   BookOpen,
   Download,
 } from "lucide-react";
+import api from "../../../services/api";
+import { Link } from "react-router-dom";
 
 const mockCertificates = [
   {
@@ -65,7 +68,17 @@ const mockCompletedCourses = [
   },
 ];
 
-const Certificate = () => {
+const CertificatePage = () => {
+  const { data: completedCourses, error } = useQuery({
+    queryKey: ["completed-courses"],
+    queryFn: () => api.get("api/courses/completed"),
+    select: (data) => data.data.data,
+  });
+
+  if (error) console.log(error);
+
+  console.log(completedCourses);
+
   const completedCertificates = mockCertificates.filter(
     (cert) => cert.status === "completed"
   );
@@ -113,17 +126,22 @@ const Certificate = () => {
           )}
         </div>
       </div>
-      {mockCompletedCourses.length > 0 && (
+      {completedCourses && completedCourses.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">
             Completed Courses - Take Exam for Certificate
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {mockCompletedCourses.map((course) => (
+            {completedCourses.map((course, index) => (
               <CompletedCourse
-                day={course.completionDate}
-                title={course.courseTitle}
-                key={course.id}
+                day={
+                  "Completed " +
+                  new Date(course.completedAt).toLocaleDateString()
+                }
+                title={course.title}
+                key={index}
+                slug={course.slug}
+                examId={course.examId}
               />
             ))}
           </div>
@@ -149,9 +167,9 @@ const Certificate = () => {
   );
 };
 
-export default Certificate;
+export default CertificatePage;
 
-const CompletedCourse = ({ title, day }) => (
+const CompletedCourse = ({ title, day, slug, examId }) => (
   <div className="border-1 w-full shadow shadow-gray-200 rounded-xl p-4 bg-white border-gray-400">
     <div className="flex  flex-col justify-between">
       <div className="flex justify-between">
@@ -162,10 +180,12 @@ const CompletedCourse = ({ title, day }) => (
         <p className="text-sm text-gray-500">Completed March 20, 2024</p>
       </div>
       <div className="pb-5">
-        <Button className="bg-blue-600 w-full py-1 text-white items-center justify-center flex gap-2">
-          <FileText className="w-4 h-4" />
-          <span>Take certificate Exam</span>
-        </Button>
+        <Link to={`/course/${slug}/exam/${examId}`}>
+          <Button className="bg-blue-600 w-full py-1 text-white items-center justify-center flex gap-2">
+            <FileText className="w-4 h-4" />
+            <span>Take certificate Exam</span>
+          </Button>
+        </Link>
       </div>
     </div>
   </div>
