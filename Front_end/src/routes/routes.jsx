@@ -11,12 +11,13 @@ import BookMarks from "../pages/dashboard/student/BookMarks";
 import MyCourses from "../pages/dashboard/student/MyCourses";
 import StudentDashboard from "../pages/dashboard/student/StudentDashboard";
 import CourseDetail from "../pages/main/Course-detail";
-import CourseExam from "../pages/main/CourseExam";
 import Courses from "../pages/main/Courses";
 import UpdateProifle from "../pages/main/Profile";
 import ReadCourse from "../pages/main/ReadCourse";
 import Exam from "../components/learn/Exam";
 import ExamPage from "../pages/dashboard/admin/ExamPage";
+import CertificatePage from "../pages/dashboard/student/Certificate";
+import CourseExam from "../pages/main/CourseExam";
 
 export const router = createBrowserRouter([
   {
@@ -37,8 +38,11 @@ export const router = createBrowserRouter([
             element: <ReadCourse />,
           },
           {
-            path: "exam",
-            element: <Exam />,
+            path: "exam/:examId",
+            children: [
+              { index: true, element: <Exam /> },
+              { path: "start", element: <CourseExam /> },
+            ],
           },
         ],
       },
@@ -93,7 +97,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: "certificates",
-                element: <Certificate />,
+                element: <CertificatePage />,
               },
             ],
           },
