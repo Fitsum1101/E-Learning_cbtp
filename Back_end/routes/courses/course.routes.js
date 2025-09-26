@@ -55,6 +55,20 @@ router.post(
   courseController.createCourse
 );
 
+router.get("/course", courseController.getAllCourses);
+
+router.get("/course/user", courseController.getAllUserCourses);
+
+router.get("/courses/category", courseController.getCourseByCategory);
+
+// router.get("/courses/progress", courseController.getCourseProgress);
+
+router.get("/courses/analytics", courseController.getCourseAnalytics);
+
+router.get("/courses/completed", courseController.getEnrollmentCompleteCourses);
+
+router.get("/course/:slug/questions", courseController.getCourseQuestions);
+
 router.put(
   "/course/:id",
   fileUploadHandler("images", ["jpg", "png", "jpeg"]).single("courseImage"),
@@ -67,13 +81,7 @@ router.put(
   courseController.updateCourse
 );
 
-router.get("/course", courseController.getAllCourses);
-
-router.get("/course/user", courseController.getAllUserCourses);
-
 router.get("/course/:slug", courseController.getCourseBySlug);
-
-router.get("/courses/category", courseController.getCourseByCategory);
 
 router.delete("/course/:id", courseController.deleteCourse);
 
@@ -81,11 +89,5 @@ router.patch(
   "/courses/:courseId/chapters/:chapterId/subchapters/reorder",
   courseController.updateSubChapterOrder
 );
-
-// router.get("/courses/progress", courseController.getCourseProgress);
-
-router.get("/courses/analytics", courseController.getCourseAnalytics);
-
-router.get("/course/:slug/questions", courseController.getCourseQuestions);
 
 module.exports = router;

@@ -1,13 +1,18 @@
-const express = require("express");
+const router = require("express").Router();
 
 const examContrller = require("../../controller/exam/exam.controller");
 
-const router = express.Router();
+router.post(
+  "/exam/course/:courseId",
 
-router.post("exam/course/:courseId", examContrller.fillExamQuestion);
+  examContrller.fillExamQuestion
+);
+router.get("/exam/course/:courseId", examContrller.getExamQuestions);
 
-router.get("exam/course/:courseId", examContrller.getExamQuestions);
+router.delete("/exam/question/:questionId", examContrller.deleteExamQuestions);
 
-router.delete("exam/question/:questionId", examContrller.deleteExamQuestions);
+router.get("/exam/:id/session/current", examContrller.getExamSession);
+
+router.get("/exam/:id/start", examContrller.getExamSessionAtake);
 
 module.exports = router;

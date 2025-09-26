@@ -495,3 +495,34 @@ exports.getAllUserCourses = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getEnrollmentCompleteCourses = async (req, res, next) => {
+  const userId = res.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
+  try {
+    const courses = await db.course.findMany({
+      where: {
+        enrollments: {
+          some: {
+            userId,
+            completed: true,
+          },
+        },
+      },
+      include: {
+        exams: true,
+      },
+    });
+
+    console.log(courses[0].exams[0].id);
+
+    res.json({
+      success: true,
+      data: courses.map((cour, i) => ({
+        ...cour,
+        examId: courses[i].exams[i]?.id,
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+};

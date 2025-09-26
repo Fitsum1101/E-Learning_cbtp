@@ -26,10 +26,13 @@ model User {
   creator       User?         @relation("UserCreator", fields: [createdBy], references: [id])
   createdUsers  User[]        @relation("UserCreator")
 
+ 
   enrollments   Enrollment[]
   ratings       Rating[]
   testimonials  Testimonial[]
-  examTakers    ExamTaker[]
+  examSession   ExamSession[]
+
+
 }
 
 model CourseCategory {
@@ -62,6 +65,7 @@ model Course {
   ratings       Rating[]
   testimonials  Testimonial[]
   questions     Question[]
+  exams         Exam[]
 }
 
 model Chapter {
@@ -114,41 +118,62 @@ model Enrollment {
 
 model Exam {
   id             String   @id @default(uuid())
-
-
-  duration       Int      @default(20)
-  passingScore   Int      @default(20)
-  createdAt      DateTime @default(now())
+  courseId       String    @default("7160c64f-5a46-494d-9aca-131ce2e5f81a")
  
-  examTakers     ExamTaker[]
-  examQuestions ExamQuestions[]
+  createdAt      DateTime @default(now())
+
+
+  course      Course     @relation(fields: [courseId], references: [id])
+  
+  ExamAttempts    ExamAttempts[]
 }
 
-model ExamTaker{
-  id        String   @id @default(uuid())
-  userId    String
-  examId    String
+model ExamAttempts{
+  id             String   @unique  @default(uuid())
+  examId         String    
+  attempt        Int      @default(1)
+  duration       Int      @default(20)
+  passingScore   Int      @default(20)
+
 
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+
+
+  @@id([examId, attempt])
+
   exam      Exam     @relation(fields: [examId], references: [id])
+  examQuestions  ExamQuestions[]
+  examSession     ExamSession[]
 }
 
 
 model ExamSession {
- id          String   @id @default(uuid())
- examTakerId String
- startedAt   DateTime @default(now())
- attempt     Int      @default(1)
+  id            String        @id @default(uuid())
+  attemptId     String
+  userId        String        @unique   
+  startedAt     DateTime      @default(now())
+  endsAt        DateTime?     
+  submittedAt   DateTime?    
+  over          Boolean            @default(false) 
+  status        ExamSessionStatus   @default(IN_PROGRESS)
+  score         Int?          
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
+  examAnswer    ExamAnswer[]
+  user          User          @relation(fields: [userId], references: [id])
+  examAttempts  ExamAttempts  @relation(fields: [attemptId], references: [id])
 }
 
+
 model ExamAnswer {
-  id         String   @id @default(uuid())
-  examId     String
-  questionId String
-  optionId   String
+  id               String   @id @default(uuid())
+  examSessionId     String
+  questionId        String
+  answerId           String
+
+  ExamSession   ExamSession  @relation(fields: [examSessionId],  references: [id])
 }
 
 model Bookmark {
@@ -201,20 +226,22 @@ model Question {
 
  
 
-  course      Course       @relation(fields: [courseId], references: [id])
-  examQuestions ExamQuestions[]
-  options   Option[]
+  course         Course       @relation(fields: [courseId], references: [id])
+  examQuestions  ExamQuestions[]
+  options        Option[]
 }
 
-model ExamQuestions{
-  id          String   @id @default(uuid())
-  examId      String
-  questionId  String
-  attempt   Int        @default(1)
-  exam        Exam     @relation(fields: [examId], references: [id])
-  question    Question @relation(fields: [questionId], references: [id])
 
-  @@unique([examId, questionId])
+model ExamQuestions{
+  id           String   @id @default(uuid())
+  attemptId    String   
+  questionId   String
+  attempt      Int        @default(1)
+
+  ExamAttempts        ExamAttempts     @relation(fields: [attemptId], references: [id])
+  question             Question        @relation(fields: [questionId], references: [id])
+
+  @@unique([attemptId, questionId])
 }
 
 
@@ -226,6 +253,7 @@ model Option {
 
   question   Question  @relation(fields: [questionId], references: [id])
 }
+
 
 model Rating {
   id         String   @id @default(uuid())
@@ -269,4 +297,11 @@ enum CourseProgressStatus {
   ACTIVE
   IN_PROGRESS
   COMPLETED
+}
+
+enum ExamSessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  PASSED
+  FAILED
 }

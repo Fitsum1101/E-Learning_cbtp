@@ -1,5 +1,23 @@
 const db = require("./config/db");
 
+// db.examTaker
+//   .create({
+//     data: {
+//       userId: "94b57e76-04a9-49bd-9547-8dc14e17e337",
+//       examId: "3642eead-d30b-4c88-a473-bb3a35a3f360",
+//       attempt: 1,
+//     },
+//   })
+//   .then((res) => console.log(res));
+
+db.enrollment
+  .updateMany({
+    data: {
+      completed: true,
+    },
+  })
+  .then((res) => console.log(res));
+
 // const courseCategories = [
 //   {
 //     name: "Web Development",

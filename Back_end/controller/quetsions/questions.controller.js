@@ -257,26 +257,25 @@ exports.getQuestionByCourseId = async (req, res, next) => {
   const attempt = +req.query.attempt || 1;
 
   try {
-    const questionsIds = await db.examQuestions.findMany({
-      omit: {
-        id: true,
-        attempt: true,
-        examId: true,
-      },
+    let examQuestion = await db.examAttempts.findMany({
       where: {
-        attempt,
-        question: {
+        exam: {
           courseId,
         },
       },
+      include: {
+        examQuestions: true,
+      },
     });
 
+    const questionsId = [];
+
+    examQuestion.forEach((exam) =>
+      exam.examQuestions.forEach((exam) => questionsId.push(exam.questionId))
+    );
     const questions = await db.question.findMany({
       where: {
-        courseId,
-        id: {
-          notIn: questionsIds.map((que) => que.questionId),
-        },
+        id: { notIn: questionsId },
         question: {
           contains: search,
         },
@@ -299,20 +298,31 @@ exports.getQuestionInExam = async (req, res, next) => {
   const search = +req.query.search || 1;
 
   try {
-    const questions = await db.examQuestions.findMany({
+    const attemptExam = await db.examAttempts.findFirst({
       where: {
         attempt,
-        question: {
+        exam: {
           courseId,
         },
+      },
+    });
+    if (!attemptExam) {
+      return res.status(404).json({
+        sucess: false,
+      });
+    }
+    const attempQuestions = await db.examQuestions.findMany({
+      where: {
+        attemptId: attemptExam.id,
       },
       include: {
         question: true,
       },
     });
+    const examQuestions = attempQuestions.map((q) => q.question);
     res.status(200).json({
       sucess: true,
-      data: questions.question,
+      data: examQuestions,
     });
   } catch (error) {
     next(error);
