@@ -168,11 +168,12 @@ model ExamSession {
 
 
 model ExamAnswer {
-  id               String   @id @default(uuid())
+  id               String    @default(uuid())
   examSessionId     String
   questionId        String
-  answerId           String
-
+  answerId           String 
+  
+   @@id([examSessionId,questionId])
   ExamSession   ExamSession  @relation(fields: [examSessionId],  references: [id])
 }
 
