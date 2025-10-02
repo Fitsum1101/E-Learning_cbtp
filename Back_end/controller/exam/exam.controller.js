@@ -246,7 +246,7 @@ exports.getExamSession = async (req, res, next) => {
     });
 
     const formattedQuestions = examQuestions.map((eq) => ({
-      examQuestionId: eq.questionId.id,
+      id: eq.questionId,
       questionText: eq.question.question,
       options: eq.question.options.map((opt) => {
         const newOpt = {
@@ -258,6 +258,8 @@ exports.getExamSession = async (req, res, next) => {
         return newOpt;
       }),
     }));
+
+    console.log({ formattedQuestions });
 
     res.status(200).json({
       message: "amaing projects",
