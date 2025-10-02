@@ -1,5 +1,17 @@
 const db = require("../../config/db");
 
+function calculateExamTimes(startingTime, endsTime, submittedTime) {
+  const start = new Date(startingTime).getTime();
+  const end = new Date(endsTime).getTime();
+  const submitted = new Date(submittedTime).getTime();
+
+  const timeLimit = Math.max(0, Math.floor((end - start) / 1000)); // seconds
+  const usedTime = Math.max(0, Math.floor((submitted - start) / 1000)); // seconds
+  const remainTime = Math.max(0, Math.floor((end - submitted) / 1000)); // seconds
+
+  return { timeLimit, usedTime, remainTime };
+}
+
 const examQuestions = (questionsId, examId, attempt) =>
   questionsId.map((questionId) => ({
     attemptId: examId,
@@ -245,21 +257,30 @@ exports.getExamSession = async (req, res, next) => {
       },
     });
 
-    const formattedQuestions = examQuestions.map((eq) => ({
-      id: eq.questionId,
-      questionText: eq.question.question,
-      options: eq.question.options.map((opt) => {
+    const anwsersIds = answeredQuestions.map((ans) => ans.answerId);
+
+    let countAnwesres = 0;
+
+    const formattedQuestions = examQuestions.map((eq) => {
+      const question = {
+        id: eq.questionId,
+        questionText: eq.question.question,
+      };
+
+      question.options = eq.question.options.map((opt) => {
         const newOpt = {
           id: opt.id,
           text: opt.text,
         };
-        if (answeredQuestions.findIndex((ansQue) => ansQue.answerId) !== -1)
-          newOpt.isCorrect = true;
+        if (anwsersIds.includes(newOpt.id)) {
+          newOpt.isAnswer = true;
+          question.isAnswered = true;
+          countAnwesres++;
+        }
         return newOpt;
-      }),
-    }));
-
-    console.log({ formattedQuestions });
+      });
+      return question;
+    });
 
     res.status(200).json({
       message: "amaing projects",
@@ -267,6 +288,7 @@ exports.getExamSession = async (req, res, next) => {
         questions: formattedQuestions,
         startsAt: attemptExam.startedAt,
         endsAt: attemptExam.endsAt,
+        percent: Math.ceil((countAnwesres / formattedQuestions.length) * 100),
       },
     });
   } catch (error) {
@@ -327,11 +349,153 @@ exports.getExamSessionAtake = async (req, res, next) => {
       },
     });
 
-    console.log(examInfo);
-
     return res.status(200).json({
       sucess: true,
       data: { ...examInfo, ...course.course },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.questionResult = async (req, res, next) => {
+  try {
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.AnsweredQuestions = async (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
+  const { questionId, answerId } = req.body;
+  console.log(questionId, answerId);
+  try {
+    const questions = await db.examSession.findFirst({
+      where: {
+        userId,
+        attemptId: id,
+      },
+    });
+    if (!questions) {
+      return res.status(402);
+    }
+
+    const questionAleadyExists = await db.examAnswer.findFirst({
+      where: {
+        examSessionId: questions.id,
+        questionId,
+      },
+    });
+
+    if (questionAleadyExists) {
+      await db.examAnswer.update({
+        where: {
+          examSessionId_questionId: {
+            examSessionId: questions.id,
+            questionId,
+          },
+        },
+        data: {
+          answerId,
+        },
+      });
+    } else
+      await db.examAnswer.create({
+        data: {
+          examSessionId: questions.id,
+          answerId,
+          questionId,
+        },
+      });
+
+    res.status(201).json({
+      message: "created or updated  successfuly!!!",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.calculateResult = async (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
+
+  try {
+    const session = await db.examSession.findFirst({
+      where: {
+        userId,
+        attemptId: id,
+      },
+    });
+
+    if (!session) {
+      return res.status(400).json({ message: "" });
+    }
+
+    const answeredQuestions = await db.examAnswer.findMany({
+      where: {
+        examSessionId: session.id,
+      },
+    });
+
+    const examQuestions = await db.examQuestions.findMany({
+      where: {
+        attemptId: id,
+      },
+      include: {
+        question: {
+          include: {
+            options: true,
+          },
+        },
+      },
+    });
+
+    const allQuestions = examQuestions.map((que) => ({
+      id: que.questionId,
+      options: que.question.options,
+    }));
+
+    const totalQuestions = examQuestions.length;
+
+    const currentTime = new Date();
+    const timeAnalaysis = calculateExamTimes(
+      session.startedAt,
+      session.endsAt,
+      currentTime
+    );
+
+    if (
+      timeAnalaysis.remainTime &&
+      answeredQuestions.length !== totalQuestions
+    ) {
+      return res.status(400).json({ message: "" });
+    }
+
+    const alalaysisQuestions = [];
+
+    allQuestions.forEach((que) => {
+      const questionIndex = answeredQuestions.findIndex(
+        (exmQue) => que.id === exmQue.questionId
+      );
+
+      let question = answeredQuestions[questionIndex];
+
+      let option = que.options.find((opt) => opt.isCorrect);
+
+      if (questionIndex !== -1) {
+        question = answeredQuestions[questionIndex];
+
+        option = que.options.find((opt) => opt.isCorrect);
+      }
+
+      alalaysisQuestions.push({
+        id: que.id,
+        answeredId: questionIndex === -1 ? undefined : question.answerId,
+        correctId: option.id,
+        isCorrect: option.id === question.answerId,
+      });
     });
   } catch (error) {
     next(error);

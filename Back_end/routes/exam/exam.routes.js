@@ -15,4 +15,6 @@ router.get("/exam/:id/session/current", examContrller.getExamSession);
 
 router.get("/exam/:id/start", examContrller.getExamSessionAtake);
 
+router.post("/exam/:id/session/current", examContrller.AnsweredQuestions);
+
 module.exports = router;
