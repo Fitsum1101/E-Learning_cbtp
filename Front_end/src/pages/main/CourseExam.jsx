@@ -1,40 +1,50 @@
-import { data, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 
-import Button from "../../components/common/Button/Button";
 import QuestionSideBar from "../../components/exam/sidbar/SideBar";
+import { useLearningTimer } from "../../hooks/useLearningTimer";
+import Button from "../../components/common/Button/Button";
 import api from "../../services/api";
-import { useCourseContext } from "../../store/course/course-context";
 
 const CourseExam = () => {
-  const [questions, setQuestions] = useState(undefined);
   const [selectedQuestion, setSelectedQuestion] = useState(undefined);
-  const { examId } = useCourseContext();
+  const [questions, setQuestions] = useState(undefined);
+  // const { examId } = useCourseContext();
 
-  console.log(examId);
+  const params = useParams();
 
   const { data } = useQuery({
-    queryKey: ["questions", examId],
+    queryKey: ["questions", params.id],
     queryFn: ({ queryKey }) =>
       api.get(`/api/exam/${queryKey[1]}/session/current`),
     select: (response) => {
       const questionData = response?.data?.data;
-      console.log(questionData.questions[0]);
+
       !questions && setQuestions(questionData.questions);
       !selectedQuestion && setSelectedQuestion(questionData.questions[0]);
       return questionData;
     },
-    enabled: examId !== undefined,
+    enabled: params.id !== undefined,
   });
 
-  console.log(selectedQuestion);
+  const { mutate } = useMutation({
+    mutationKey: ["AddAnsweredQuestions"],
+    mutationFn: (data) => {
+      return api.post(`/api/exam/${params.id}/session/current`, data);
+    },
+  });
+
+  const { formattedTime, remainingTime } = useLearningTimer(data?.startsAt);
 
   return (
     <div className="h-[calc(100vh-72px)]">
       <div className="flex h-full">
         <QuestionSideBar
           questions={questions}
+          percent={data?.percent}
+          startsTime={formattedTime}
+          remainingTime={remainingTime}
           activeQuestion={selectedQuestion}
           handleActiveQuestion={(question) => setSelectedQuestion(question)}
         />
@@ -57,20 +67,26 @@ const CourseExam = () => {
                 <button
                   key={index}
                   onClick={() => {
+                    let questionId;
+                    let answerId;
                     const prev = [...questions];
-
                     const questionIndex = prev.findIndex(
                       (que) => que.id === selectedQuestion.id
                     );
+
                     const question = prev[questionIndex];
                     question.isAnswered = true;
+                    questionId = question.id;
+
                     question.options = question.options.map((opt) => {
                       if (opt.id === option.id) {
+                        answerId = option.id;
                         return { ...opt, isAnswer: true };
                       }
                       return { ...opt, isAnswer: false };
                     });
 
+                    mutate({ questionId, answerId });
                     setQuestions(prev);
                     setSelectedQuestion(question);
                   }}

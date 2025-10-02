@@ -41,7 +41,7 @@ export const router = createBrowserRouter([
             path: "exam/:examId",
             children: [
               { index: true, element: <Exam /> },
-              { path: "start", element: <CourseExam /> },
+              { path: "start/:id", element: <CourseExam /> },
             ],
           },
         ],

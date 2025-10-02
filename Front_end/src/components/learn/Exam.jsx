@@ -114,7 +114,7 @@ const Exam = () => {
 
   const startExam = () => {
     handleExamId(data.id);
-    navigate(`start`);
+    navigate(`start/${data.id}`);
   };
 
   return (
