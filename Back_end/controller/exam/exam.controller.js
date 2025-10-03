@@ -282,12 +282,19 @@ exports.getExamSession = async (req, res, next) => {
       return question;
     });
 
+    const now = new Date();
+
+    const timeAnalaysis = calculateExamTimes(
+      attemptExam.startedAt,
+      attemptExam.endsAt,
+      now
+    );
+
     res.status(200).json({
       message: "amaing projects",
       data: {
         questions: formattedQuestions,
-        startsAt: attemptExam.startedAt,
-        endsAt: attemptExam.endsAt,
+        ...timeAnalaysis,
         percent: Math.ceil((countAnwesres / formattedQuestions.length) * 100),
       },
     });
@@ -473,6 +480,8 @@ exports.calculateResult = async (req, res, next) => {
       return res.status(400).json({ message: "" });
     }
 
+    console.log(timeAnalaysis);
+
     const alalaysisQuestions = [];
 
     allQuestions.forEach((que) => {
@@ -497,6 +506,8 @@ exports.calculateResult = async (req, res, next) => {
         isCorrect: option.id === question.answerId,
       });
     });
+
+    console.log({ alalaysisQuestions });
   } catch (error) {
     next(error);
   }

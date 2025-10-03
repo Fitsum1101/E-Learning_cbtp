@@ -39,7 +39,7 @@ exports.getAllEnrollments = async (req, res, next) => {
 
 exports.getEnrollmentById = async (req, res, next) => {
   const { slug } = req.params;
-  const userId = req.user?.id || "1301d38b-2d2d-4649-a003-0c45e912fe8f";
+  const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
   try {
     const course = await db.course.findUnique({
       where: { slug },
