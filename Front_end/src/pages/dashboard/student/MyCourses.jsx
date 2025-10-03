@@ -16,7 +16,7 @@ const MyCourses = () => {
     status: status.ALL,
     sortBy: "Recently Accessed",
   });
-  console.log(searchTerm);
+
   const { data: enrollmentCourses } = useCustomQuery(
     "EnrollmentCourses",
     "api/enrollments/courses",

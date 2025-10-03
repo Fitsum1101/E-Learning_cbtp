@@ -18,8 +18,6 @@ const DisplayQuestions = ({ selectCourse, handleQuestionEdit }) => {
     },
   });
 
-  console.log({ data });
-
   const { ref, inView } = useInView();
 
   useEffect(() => {

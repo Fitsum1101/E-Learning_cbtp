@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useState } from "react";
 
 import QuestionSideBar from "../../components/exam/sidbar/SideBar";
 import { useLearningTimer } from "../../hooks/useLearningTimer";
@@ -10,7 +10,6 @@ import api from "../../services/api";
 const CourseExam = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(undefined);
   const [questions, setQuestions] = useState(undefined);
-  // const { examId } = useCourseContext();
 
   const params = useParams();
 
@@ -35,7 +34,16 @@ const CourseExam = () => {
     },
   });
 
-  const { formattedTime, remainingTime } = useLearningTimer(data?.startsAt);
+  const { mutate: result, error } = useMutation({
+    mutationKey: ["questionresult"],
+    mutationFn: () => api.post(`api/exam/${params.id}/result`),
+  });
+
+  if (error) console.log(error);
+
+  console.log({ time: data?.remainTime });
+
+  const { formattedTime, remainingTime } = useLearningTimer(data?.remainTime);
 
   return (
     <div className="h-[calc(100vh-72px)]">
@@ -45,6 +53,7 @@ const CourseExam = () => {
           percent={data?.percent}
           startsTime={formattedTime}
           remainingTime={remainingTime}
+          onSubmit={result}
           activeQuestion={selectedQuestion}
           handleActiveQuestion={(question) => setSelectedQuestion(question)}
         />

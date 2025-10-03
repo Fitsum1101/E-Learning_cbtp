@@ -3,18 +3,26 @@ import { BookOpen, Clock, Timer, TimerIcon } from "lucide-react";
 import LinearProgress from "@mui/material/LinearProgress";
 import Button from "../../common/Button/Button";
 import Question from "../questions/Questions";
+import { useEffect } from "react";
+
+const calcRemaining = (expiryTime) => {
+  const now = Date.now();
+  const diff = Math.max(0, Math.floor((expiryTime - now) / 1000)); // seconds left
+  return diff;
+};
 
 const QuestionSideBar = ({
   questions,
   activeQuestion,
   remainingTime,
-  startsTime,
   handleActiveQuestion,
   percent,
+  startsTime,
+  onSubmit,
 }) => {
   const isAllCourseAnswered =
     questions?.findIndex((que) => !("isAnswered" in que)) !== -1;
-  console.log({ percent });
+
   return (
     <div className="flex flex-col justify-between h-full border-r border-blue-200 w-80 bg-blue-50 ">
       <div className="flex flex-col p-4 bg-blue-100">
@@ -73,6 +81,7 @@ const QuestionSideBar = ({
       <div className="flex items-center justify-center p-3 mt-2 text-white bg-blue-100 p ">
         <Button
           disabled={isAllCourseAnswered}
+          onClick={onSubmit}
           className={`w-full py-1 text-center  bg-blue-600 hover:bg-blue-700 rounded-xl `}
         >
           Submit Exam
