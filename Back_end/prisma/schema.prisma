@@ -139,11 +139,10 @@ model ExamAttempts{
   createdAt DateTime @default(now())
 
 
-
   @@id([examId, attempt])
 
-  exam      Exam     @relation(fields: [examId], references: [id])
-  examQuestions  ExamQuestions[]
+  exam            Exam     @relation(fields: [examId], references: [id])
+  examQuestions   ExamQuestions[]
   examSession     ExamSession[]
 }
 

@@ -499,7 +499,7 @@ exports.getAllUserCourses = async (req, res, next) => {
 exports.getEnrollmentCompleteCourses = async (req, res, next) => {
   const userId = res.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
   try {
-    const courses = await db.course.findMany({
+    let courses = await db.course.findMany({
       where: {
         enrollments: {
           some: {
@@ -513,7 +513,36 @@ exports.getEnrollmentCompleteCourses = async (req, res, next) => {
       },
     });
 
-    console.log(courses[0].exams[0].id);
+    courses = await Promise.all(
+      courses.map(async (cour) => {
+        const ExamAttempts = await db.examAttempts.findMany({
+          where: {
+            examId: cour.exams[0]?.id,
+          },
+        });
+
+        const takenExams = await db.examSession.findFirst({
+          where: {
+            userId,
+            attemptId: {
+              in: ExamAttempts.map((e) => e.id),
+            },
+            status: "IN_PROGRESS",
+          },
+        });
+
+        if (takenExams) {
+          cour.status = takenExams.status;
+          cour.examId = cour.exams[0]?.id;
+          cour.attemptId = takenExams.attemptId;
+        } else {
+          cour.status = "NOT_TAKEN";
+        }
+        return cour;
+      })
+    );
+
+    console.log(courses);
 
     res.json({
       success: true,
