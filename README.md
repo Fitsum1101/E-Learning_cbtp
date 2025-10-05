@@ -8,5 +8,7 @@
 - **Certificate Issuance**: Issue a certificate upon course completion with a unique verification code.
 - **Feedback and Communication**: Enable users to submit suggestions or report issues via a contact/feedback form.
 - **Admin Panel**: Allow admins to upload, edit, delete, and organize course content (e.g., modules, lessons), manage users (e.g., view profiles, monitor activity), and monitor platform usage and activity logs.
-- ![alt](https://res.cloudinary.com/dofqz9ryj/image/upload/v1759690906/screencapture-localhost-5173-course-react-for-beginners-learn-2025-10-05-21_53_13_gdxklv.png)
-- All student reading materials come from Markdown files uploaded by the admin. When these files are fetched by the frontend, they are converted to HTML for display in the e-learning platform
+- **All student reading materials come from Markdown files uploaded by the admin. When these files are fetched by the frontend, they are converted to HTML for display in the e-learning platform**
+
+  ![alt](https://res.cloudinary.com/dofqz9ryj/image/upload/v1759690906/screencapture-localhost-5173-course-react-for-beginners-learn-2025-10-05-21_53_13_gdxklv.png)
+
