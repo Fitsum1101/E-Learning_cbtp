@@ -156,13 +156,11 @@ const ReadCourse = () => {
   const handleOnChange = (subChapterId, completed) =>
     mutate({ subChapterId, completed });
 
-  console.log(course);
-
   return (
     <div>
       <div className="flex h-[88.5vh]">
         <div className="flex flex-col gap-2 p-2 border-b border-blue-200 bg-blue-50">
-          <h3 className="p-2 font-semibold capitalize text-md">
+          <h3 className="p-2 font-semibold backdrop-blur-md   capitalize text-md">
             Course contents
           </h3>
           <div className="overflow-y-scroll">

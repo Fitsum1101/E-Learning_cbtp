@@ -19,13 +19,16 @@ const Questions = () => {
     createQuestion: false,
     updateQuestionsId: undefined,
   });
+
   const [selectedCourse, setSelectedCourse] = useState(initalSelectedCourse);
 
   const { data: course } = useQuery({
     queryKey: ["courses"],
-    queryFn: () => api.get("/api/course"),
+    queryFn: () => api.get("/api/course/user"),
     select: (data) => data.data,
   });
+
+  console.log({ courses: course?.data });
 
   return (
     <div className="min-h-screen bg-background">

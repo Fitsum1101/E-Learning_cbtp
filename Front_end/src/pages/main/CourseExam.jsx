@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import QuestionSideBar from "../../components/exam/sidbar/SideBar";
 import { useLearningTimer } from "../../hooks/useLearningTimer";
@@ -10,22 +10,35 @@ import api from "../../services/api";
 const CourseExam = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(undefined);
   const [questions, setQuestions] = useState(undefined);
+  const [time, setTime] = useState(0);
 
   const params = useParams();
 
-  const { data } = useQuery({
+  const { data, isSuccess, error } = useQuery({
     queryKey: ["questions", params.id],
     queryFn: ({ queryKey }) =>
       api.get(`/api/exam/${queryKey[1]}/session/current`),
     select: (response) => {
       const questionData = response?.data?.data;
-
-      !questions && setQuestions(questionData.questions);
-      !selectedQuestion && setSelectedQuestion(questionData.questions[0]);
+      // !questions && setQuestions(questionData?.questions);
+      // !selectedQuestion && setSelectedQuestion(questionData?.questions[0]);
       return questionData;
     },
     enabled: params.id !== undefined,
   });
+
+  if (error) {
+    console.log(error);
+  }
+
+  useEffect(() => {
+    if (isSuccess && data?.remainTime) {
+      console.log(data.remainTime);
+      setTime(data.remainTime);
+    }
+    !questions && setQuestions(data?.questions);
+    !selectedQuestion && setSelectedQuestion(data?.questions[0]);
+  }, [isSuccess, data]);
 
   const { mutate } = useMutation({
     mutationKey: ["AddAnsweredQuestions"],
@@ -34,16 +47,12 @@ const CourseExam = () => {
     },
   });
 
-  const { mutate: result, error } = useMutation({
+  const { mutate: result } = useMutation({
     mutationKey: ["questionresult"],
     mutationFn: () => api.post(`api/exam/${params.id}/result`),
   });
 
-  if (error) console.log(error);
-
-  console.log({ time: data?.remainTime });
-
-  const { formattedTime, remainingTime } = useLearningTimer(data?.remainTime);
+  const { formattedTime, remainingTime } = useLearningTimer(time);
 
   return (
     <div className="h-[calc(100vh-72px)]">
@@ -129,21 +138,12 @@ const CourseExam = () => {
             <div className="flex items-center justify-between max-w-2xl">
               <Button
                 variant="outline"
-                // onClick={handlePreviousQuestion}
-                // disabled={examState.currentQuestion === 0}
                 className="py-1 text-blue-700 bg-transparent border-blue-300 hover:bg-blue-100"
               >
                 Previous Question
               </Button>
 
-              <Button
-                // onClick={handleNextQuestion}
-                // disabled={
-                //   examState.currentQuestion ===
-                //   mockExamData.questions.length - 1
-                // }
-                className="py-1 text-white bg-blue-600 hover:bg-blue-700"
-              >
+              <Button className="py-1 text-white bg-blue-600 hover:bg-blue-700">
                 Next Question
               </Button>
             </div>

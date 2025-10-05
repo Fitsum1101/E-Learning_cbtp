@@ -11,16 +11,30 @@ export function formatTime(seconds) {
 }
 
 export function useLearningTimer(expiryTime) {
-  const [remainTime, setRemining] = useState(undefined);
+  const [remainTime, setRemaining] = useState(expiryTime);
+
+  console.log({ remainTime });
 
   useEffect(() => {
-    if (remainTime === undefined) return setRemining(expiryTime);
+    if (expiryTime == undefined) return;
 
-    const iterval = setInterval(() => {
-      setRemining(remainTime - 1);
+    setRemaining(expiryTime); // initialize on mount or expiryTime change
+
+    const interval = setInterval(() => {
+      setRemaining((prev) => {
+        if (prev <= 1 || prev === undefined) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
-    return () => clearInterval(iterval);
-  });
-  return { remainTime, formattedTime: formatTime(remainTime) };
+    return () => clearInterval(interval);
+  }, [expiryTime]);
+
+  return {
+    remainTime,
+    formattedTime: formatTime(remainTime),
+  };
 }

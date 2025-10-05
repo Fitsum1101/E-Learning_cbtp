@@ -38,6 +38,8 @@ const ExamPage = () => {
     },
   });
 
+  console.log({ questions });
+
   const { data: examQuestions } = useQuery({
     queryKey: ["examCourses", urlElemets],
     queryFn: () =>

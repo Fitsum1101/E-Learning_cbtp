@@ -77,14 +77,13 @@ const CertificatePage = () => {
 
   if (error) console.log(error);
 
-  console.log(completedCourses);
-
   const completedCertificates = mockCertificates.filter(
     (cert) => cert.status === "completed"
   );
   const expiredCertificates = mockCertificates.filter(
     (cert) => cert.status === "expired"
   );
+
   return (
     <div className="">
       <div className="mb-8">
@@ -142,6 +141,8 @@ const CertificatePage = () => {
                 key={index}
                 slug={course.slug}
                 examId={course.examId}
+                status={course.status}
+                attemptId={course.attemptId}
               />
             ))}
           </div>
@@ -169,7 +170,7 @@ const CertificatePage = () => {
 
 export default CertificatePage;
 
-const CompletedCourse = ({ title, day, slug, examId }) => (
+const CompletedCourse = ({ title, day, slug, examId, status, attemptId }) => (
   <div className="border-1 w-full shadow shadow-gray-200 rounded-xl p-4 bg-white border-gray-400">
     <div className="flex  flex-col justify-between">
       <div className="flex justify-between">
@@ -180,10 +181,20 @@ const CompletedCourse = ({ title, day, slug, examId }) => (
         <p className="text-sm text-gray-500">Completed March 20, 2024</p>
       </div>
       <div className="pb-5">
-        <Link to={`/course/${slug}/exam/${examId}`}>
+        <Link
+          to={
+            status === "IN_PROGRESS"
+              ? `/course/${slug}/exam/${examId}/start/${attemptId}`
+              : `/course/${slug}/exam/${examId}`
+          }
+        >
           <Button className="bg-blue-600 w-full py-1 text-white items-center justify-center flex gap-2">
             <FileText className="w-4 h-4" />
-            <span>Take certificate Exam</span>
+            <span>
+              {status === "IN_PROGRESS"
+                ? "continue..."
+                : "Take certificate Exam"}
+            </span>
           </Button>
         </Link>
       </div>

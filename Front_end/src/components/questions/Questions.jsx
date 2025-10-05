@@ -6,6 +6,7 @@ import { Edit, Trash2 } from "lucide-react";
 import api from "../../services/api";
 
 const DisplayQuestions = ({ selectCourse, handleQuestionEdit }) => {
+  console.log(selectCourse);
   const { data, fetchNextPage, hasNextPage, isPending } = useInfiniteQuery({
     queryKey: ["questions", { slug: selectCourse?.slug }],
     queryFn: ({ pageParam = 1, queryKey }) =>

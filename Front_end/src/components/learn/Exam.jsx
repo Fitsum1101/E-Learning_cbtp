@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  MailIcon,
   Timer,
   Users,
 } from "lucide-react";
@@ -112,6 +113,8 @@ const Exam = () => {
     select: (response) => response.data.data,
   });
 
+  console.log(data);
+
   const startExam = () => {
     handleExamId(data.id);
     navigate(`start/${data.id}`);
@@ -130,14 +133,17 @@ const Exam = () => {
                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm">
                       <FileText className="w-6 h-6 text-white" />
                     </div>
-                    <Badge className="text-white bg-white/20 border-white/30 hover:bg-white/30">
+                    <p className="border bg-[#4275E7] text-sm px-2 rounded-xl  ml-2">
                       {data?.level}
-                    </Badge>
+                    </p>
                   </div>
-                  <h1 className="mb-3 flex text-3xl font-bold md:text-4xl text-balance">
-                    <BookOpen className="w-5 h-5 ml-2" />
-                    {data?.title}
+                  <h1 className="text-3xl md:text-4xl font-bold text-balance mb-3">
+                    Final Assessment
                   </h1>
+                  <p className="text-xl text-blue-100 flex items-center gap-2 mb-4">
+                    <BookOpen className="h-5 w-5" />
+                    {data?.title}
+                  </p>
                   <p className="mb-4 text-blue-100 text-pretty">
                     {data?.description}
                   </p>
@@ -183,7 +189,7 @@ const Exam = () => {
                           Time Limit
                         </div>
                         <div className="text-blue-700">
-                          {mockExamData.timeLimit} minutes total
+                          {data?.duration} minutes total
                         </div>
                       </div>
                     </div>
@@ -196,8 +202,7 @@ const Exam = () => {
                           Total Questions
                         </div>
                         <div className="text-blue-700">
-                          {mockExamData.questions.length} multiple-choice
-                          questions
+                          {data?.totalQuestions} multiple-choice questions
                         </div>
                       </div>
                     </div>
@@ -269,8 +274,9 @@ const Exam = () => {
                   below to start your exam.
                 </p>
                 <p className="text-sm text-blue-600">
-                  Remember: You have {mockExamData.timeLimit} minutes to
-                  complete {20} questions
+                  Remember: You have {data?.duration} minutes to complete{" "}
+                  {data?.totalQuestions}
+                  questions
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
