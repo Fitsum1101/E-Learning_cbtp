@@ -514,42 +514,46 @@ exports.getEnrollmentCompleteCourses = async (req, res, next) => {
     });
 
     courses = await Promise.all(
-      courses.map(async (cour) => {
+      courses.map(async (cour, i) => {
         const ExamAttempts = await db.examAttempts.findMany({
           where: {
-            examId: cour.exams[0]?.id,
+            examId: cour.exams[0]?.id || "0",
           },
         });
 
-        const takenExams = await db.examSession.findFirst({
+        const takenExams = await db.examSession.findMany({
           where: {
             userId,
+
             attemptId: {
               in: ExamAttempts.map((e) => e.id),
             },
-            status: "IN_PROGRESS",
           },
         });
 
-        if (takenExams) {
-          cour.status = takenExams.status;
-          cour.examId = cour.exams[0]?.id;
-          cour.attemptId = takenExams.attemptId;
+        const progressExam = takenExams.find(
+          (exam) => exam.status === "IN_PROGRESS"
+        );
+        if (takenExams.length === 3 && !progressExam) {
+          return undefined;
+        }
+
+        if (progressExam) {
+          cour.status = progressExam.status;
+          cour.attemptId = progressExam.attemptId;
         } else {
           cour.status = "NOT_TAKEN";
         }
+
+        cour.examId = cour.exams[0]?.id;
+        console.log(cour);
         return cour;
       })
     );
 
-    console.log(courses);
-
     res.json({
       success: true,
-      data: courses.map((cour, i) => ({
-        ...cour,
-        examId: courses[i].exams[i]?.id,
-      })),
+      data: courses.filter((cour) => cour),
     });
   } catch (error) {
     next(error);

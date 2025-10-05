@@ -168,7 +168,7 @@ exports.getQuestionBy = async (req, res, next) => {
 
 exports.getQuestions = async (req, res, next) => {
   const page = +req.query.page || 1;
-  const userId = req.user?.id || "1301d38b-2d2d-4649-a003-0c45e912fe8f";
+  const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
   const slug = !req.query?.filter ? "all" : req.query?.filter;
 
   try {
@@ -273,8 +273,10 @@ exports.getQuestionByCourseId = async (req, res, next) => {
     examQuestion.forEach((exam) =>
       exam.examQuestions.forEach((exam) => questionsId.push(exam.questionId))
     );
+
     const questions = await db.question.findMany({
       where: {
+        courseId,
         id: { notIn: questionsId },
         question: {
           contains: search,

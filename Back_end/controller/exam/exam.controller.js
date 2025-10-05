@@ -169,7 +169,22 @@ exports.deleteExamQuestions = async (req, res, next) => {
 exports.getExamSession = async (req, res, next) => {
   const attemptExamId = req.params.id;
   const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
+  console.log(attemptExamId, userId);
   try {
+    const isActiveExamExists = await db.examSession.findFirst({
+      where: {
+        userId,
+        attemptId: {
+          not: attemptExamId,
+        },
+      },
+    });
+
+    if (isActiveExamExists) {
+      console.log(" creating other the continue exam session");
+      return res.status(304).json({ sucess: false });
+    }
+
     let attemptExam = await db.examSession.findFirst({
       where: {
         attemptId: attemptExamId,
@@ -185,12 +200,15 @@ exports.getExamSession = async (req, res, next) => {
     if (!attemptExam) {
       const startedAt = new Date();
       const endsAt = new Date(startedAt.getTime() + exam.duration * 60 * 1000);
+      const now = new Date();
+      const timeAnalaysis = calculateExamTimes(startedAt, endsAt, now);
 
       attemptExam = await db.examSession.create({
         data: {
           attemptId: attemptExamId,
-          endsAt,
           userId,
+          endsAt,
+          startedAt,
         },
       });
 
@@ -212,7 +230,7 @@ exports.getExamSession = async (req, res, next) => {
       });
 
       const formattedQuestions = examQuestions.map((eq) => ({
-        examQuestionId: eq.questionId.id,
+        id: eq.questionId,
         questionText: eq.question.question,
         options: eq.question.options.map((opt) => ({
           id: opt.id,
@@ -224,8 +242,7 @@ exports.getExamSession = async (req, res, next) => {
         message: "finally",
         data: {
           questions: formattedQuestions,
-          startsAt: attemptExam.startedAt,
-          endsAt: attemptExam.endsAt,
+          ...timeAnalaysis,
         },
       });
     }
@@ -289,7 +306,7 @@ exports.getExamSession = async (req, res, next) => {
       attemptExam.endsAt,
       now
     );
-
+    console.log({ timeAnalaysis });
     res.status(200).json({
       message: "amaing projects",
       data: {
@@ -317,13 +334,9 @@ exports.getExamSessionAtake = async (req, res, next) => {
       },
     });
 
-    const index = attempts.length + 1;
+    const attempt = attempts.length + 1;
 
-    const attemptIndex = attempts.findIndex(
-      (att) => att.status === "IN_PROGRESS"
-    );
-
-    if (index > 3) {
+    if (attempt > 3) {
       return res.status(400).json({
         sucess: false,
       });
@@ -331,18 +344,21 @@ exports.getExamSessionAtake = async (req, res, next) => {
 
     const examInfo = await db.examAttempts.findFirst({
       where: {
-        attempt:
-          attemptIndex !== -1
-            ? attempts[attemptIndex].examAttempts.attempt
-            : index,
+        attempt: attempt,
         examId,
       },
+      include: {
+        examQuestions: true,
+      },
     });
+
+    const totalQuestions = examInfo.examQuestions.length;
 
     const course = await db.exam.findFirst({
       where: {
         id: examInfo.examId,
       },
+
       include: {
         course: {
           select: {
@@ -356,9 +372,11 @@ exports.getExamSessionAtake = async (req, res, next) => {
       },
     });
 
+    console.log(course);
+
     return res.status(200).json({
       sucess: true,
-      data: { ...examInfo, ...course.course },
+      data: { ...examInfo, ...course.course, totalQuestions },
     });
   } catch (error) {
     next(error);
@@ -376,7 +394,7 @@ exports.AnsweredQuestions = async (req, res, next) => {
   const { id } = req.params;
   const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
   const { questionId, answerId } = req.body;
-  console.log(questionId, answerId);
+
   try {
     const questions = await db.examSession.findFirst({
       where: {
@@ -440,6 +458,13 @@ exports.calculateResult = async (req, res, next) => {
       return res.status(400).json({ message: "" });
     }
 
+    const currentTime = new Date();
+    const timeAnalaysis = calculateExamTimes(
+      session.startedAt,
+      session.endsAt,
+      currentTime
+    );
+
     const answeredQuestions = await db.examAnswer.findMany({
       where: {
         examSessionId: session.id,
@@ -466,13 +491,6 @@ exports.calculateResult = async (req, res, next) => {
 
     const totalQuestions = examQuestions.length;
 
-    const currentTime = new Date();
-    const timeAnalaysis = calculateExamTimes(
-      session.startedAt,
-      session.endsAt,
-      currentTime
-    );
-
     if (
       timeAnalaysis.remainTime &&
       answeredQuestions.length !== totalQuestions
@@ -480,9 +498,8 @@ exports.calculateResult = async (req, res, next) => {
       return res.status(400).json({ message: "" });
     }
 
-    console.log(timeAnalaysis);
-
     const alalaysisQuestions = [];
+    let correctQuestions = 0;
 
     allQuestions.forEach((que) => {
       const questionIndex = answeredQuestions.findIndex(
@@ -499,6 +516,8 @@ exports.calculateResult = async (req, res, next) => {
         option = que.options.find((opt) => opt.isCorrect);
       }
 
+      if (option.id === question.answerId) correctQuestions++;
+
       alalaysisQuestions.push({
         id: que.id,
         answeredId: questionIndex === -1 ? undefined : question.answerId,
@@ -506,8 +525,36 @@ exports.calculateResult = async (req, res, next) => {
         isCorrect: option.id === question.answerId,
       });
     });
+    await db.examSession.update({
+      where: {
+        id: session.id,
+      },
+      data: {
+        score: correctQuestions,
+        submittedAt: currentTime,
+        status:
+          Math.floor(allQuestions.length / 2) <= correctQuestions
+            ? "PASSED"
+            : "FAILED",
+        over: true,
+      },
+    });
+    res.status(200).json({ message: "" });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    console.log({ alalaysisQuestions });
+exports.getResult = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const session = await db.examSession({
+      id,
+    });
+
+    if (session) {
+      res.status().json({});
+    }
   } catch (error) {
     next(error);
   }

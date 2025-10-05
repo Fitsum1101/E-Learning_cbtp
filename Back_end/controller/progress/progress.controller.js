@@ -3,7 +3,7 @@ const db = require("../../config/db");
 exports.createProgress = async (req, res, next) => {
   const { courseId } = req.params;
   const { completed, subChapterId } = req.body;
-  const userId = req.user?.id || "1301d38b-2d2d-4649-a003-0c45e912fe8f";
+  const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
   try {
     const course = await db.course.findFirst({
       where: { id: courseId },
@@ -12,6 +12,14 @@ exports.createProgress = async (req, res, next) => {
     if (!course) {
       return res.status(404).json({ error: "Course not found" });
     }
+
+    const totalSubchapters = await db.subChapter.count({
+      where: {
+        chapter: {
+          courseId,
+        },
+      },
+    });
 
     const enrollment = await db.enrollment.findFirst({
       where: { courseId, userId },
@@ -41,6 +49,7 @@ exports.createProgress = async (req, res, next) => {
         where: { id: progress.id },
         data: { completed },
       });
+
       if (completed === "ACTIVE") {
         await db.progress.updateMany({
           where: {
@@ -51,6 +60,23 @@ exports.createProgress = async (req, res, next) => {
         });
       }
     }
+
+    const totalEndedSubchapters = await db.progress.count({
+      where: {
+        enrollmentId: enrollment.id,
+        completed: "COMPLETED",
+      },
+    });
+
+    await db.enrollment.update({
+      where: {
+        id: enrollment.id,
+      },
+      data: {
+        completed: totalEndedSubchapters === totalSubchapters ? true : false,
+      },
+    });
+
     res.status(201).json({
       data: {
         message: "Progress created successfully",
