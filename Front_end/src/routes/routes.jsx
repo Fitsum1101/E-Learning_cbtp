@@ -18,6 +18,7 @@ import Exam from "../components/learn/Exam";
 import ExamPage from "../pages/dashboard/admin/ExamPage";
 import CertificatePage from "../pages/dashboard/student/Certificate";
 import CourseExam from "../pages/main/CourseExam";
+import ExamResult from "../pages/main/ExamResult";
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <Exam /> },
               { path: "start/:id", element: <CourseExam /> },
+              { path: "result/:id", element: <ExamResult /> },
             ],
           },
         ],

@@ -553,7 +553,10 @@ exports.getResult = async (req, res, next) => {
     });
 
     if (session) {
-      res.status().json({});
+      res.status(404).json({
+        sucess: false,
+        message: "Not found",
+      });
     }
   } catch (error) {
     next(error);
