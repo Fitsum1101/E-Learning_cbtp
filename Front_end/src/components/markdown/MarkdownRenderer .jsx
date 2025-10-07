@@ -1,11 +1,11 @@
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
 const MarkdownRenderer = ({ content }) => {
   return (
-    <Suspense fallback={<div className="text-9xl text-black">Loading...</div>}>
+    <Suspense fallback={<div className="text-black text-9xl">Loading...</div>}>
       <ReactMarkdown
         children={content}
         components={{
@@ -33,15 +33,15 @@ const MarkdownRenderer = ({ content }) => {
 
           // Headings
           h1: ({ children }) => (
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            <h1 className="mb-4 text-2xl font-bold text-gray-900">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-xl font-semibold  mb-3">{children}</h2>
+            <h2 className="mb-3 text-xl font-semibold">{children}</h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-lg font-medium  mb-2">{children}</h3>
+            <h3 className="mb-2 text-lg font-medium">{children}</h3>
           ),
           img: ({ src, alt }) => (
             <img
@@ -69,7 +69,7 @@ const MarkdownRenderer = ({ content }) => {
 
           // Blockquotes
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 flex  items-center border-blue-700 pl-4 italic text-gray-700 bg-blue-100 rounded-md my-4">
+            <blockquote className="flex items-center pl-4 my-4 italic text-gray-700 bg-blue-100 border-l-4 border-blue-700 rounded-md">
               {children}
             </blockquote>
           ),
