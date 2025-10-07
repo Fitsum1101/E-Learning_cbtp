@@ -525,6 +525,12 @@ exports.calculateResult = async (req, res, next) => {
         isCorrect: option.id === question.answerId,
       });
     });
+
+    const isFailed = Math.floor(allQuestions.length / 2) <= correctQuestions;
+
+    if (isFailed) {
+    }
+
     await db.examSession.update({
       where: {
         id: session.id,
@@ -532,10 +538,7 @@ exports.calculateResult = async (req, res, next) => {
       data: {
         score: correctQuestions,
         submittedAt: currentTime,
-        status:
-          Math.floor(allQuestions.length / 2) <= correctQuestions
-            ? "PASSED"
-            : "FAILED",
+        status: isFailed ? "PASSED" : "FAILED",
         over: true,
       },
     });
@@ -546,18 +549,26 @@ exports.calculateResult = async (req, res, next) => {
 };
 
 exports.getResult = async (req, res, next) => {
-  const { id } = req.params;
+  const id = req.params?.id || "fe7e34b1-f0cf-4ea1-884d-b2fb774d37c6";
+  const userId = req.user?.id || "kdkksksjsjssjks";
+
   try {
-    const session = await db.examSession({
+    const session = await db.examSession.findUnique({
       id,
+      userId,
     });
 
-    if (session) {
+    if (!session) {
       res.status(404).json({
         sucess: false,
         message: "Not found",
       });
     }
+    const examQuestions = await db.examQuestions.count({
+      where: {
+        attemptId: session.attemptId,
+      },
+    });
   } catch (error) {
     next(error);
   }
