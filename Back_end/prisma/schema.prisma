@@ -156,9 +156,12 @@ model ExamSession {
   submittedAt   DateTime?    
   over          Boolean            @default(false) 
   status        ExamSessionStatus   @default(IN_PROGRESS)
-  score         Int?          
+  score         Int?   
+  filename      String?               
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+   
+
 
   examAnswer    ExamAnswer[]
   user          User          @relation(fields: [userId], references: [id])

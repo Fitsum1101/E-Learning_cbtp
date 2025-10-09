@@ -20,4 +20,6 @@ router.post("/exam/:id/session/current", examContrller.AnsweredQuestions);
 
 router.post("/exam/:id/result", examContrller.calculateResult);
 
+router.get("/exam/:id/result", examContrller.getResult);
+
 module.exports = router;

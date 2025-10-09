@@ -524,16 +524,23 @@ exports.getEnrollmentCompleteCourses = async (req, res, next) => {
         const takenExams = await db.examSession.findMany({
           where: {
             userId,
-
             attemptId: {
               in: ExamAttempts.map((e) => e.id),
             },
           },
         });
 
+        if (
+          takenExams.length > 0 &&
+          takenExams.findIndex((exam) => ["PASSED"].includes(exam.status)) !==
+            -1
+        )
+          return undefined;
+
         const progressExam = takenExams.find(
           (exam) => exam.status === "IN_PROGRESS"
         );
+
         if (takenExams.length === 3 && !progressExam) {
           return undefined;
         }
@@ -541,12 +548,10 @@ exports.getEnrollmentCompleteCourses = async (req, res, next) => {
         if (progressExam) {
           cour.status = progressExam.status;
           cour.attemptId = progressExam.attemptId;
-        } else {
-          cour.status = "NOT_TAKEN";
-        }
+        } else cour.status = "NOT_TAKEN";
 
         cour.examId = cour.exams[0]?.id;
-        console.log(cour);
+
         return cour;
       })
     );

@@ -1,4 +1,5 @@
 const db = require("../../config/db");
+const generateAndUploadCertificate = require("../../util/generateCert");
 
 function calculateExamTimes(startingTime, endsTime, submittedTime) {
   const start = new Date(startingTime).getTime();
@@ -24,8 +25,6 @@ exports.fillExamQuestion = async (req, res, next) => {
   const courseId = req.params.courseId;
 
   let attemptExam;
-
-  console.log("called");
 
   try {
     let exam = await db.exam.findFirst({
@@ -74,7 +73,6 @@ exports.fillExamQuestion = async (req, res, next) => {
           (exam) => exam.attempt === attempt
         );
       }
-      console.log({ attemptExam });
       examQuestionsResult = await db.examQuestions.createMany({
         data: examQuestions(questionsId, attemptExam.id, attempt),
       });
@@ -166,10 +164,86 @@ exports.deleteExamQuestions = async (req, res, next) => {
   }
 };
 
+exports.getExamSessionAtake = async (req, res, next) => {
+  const examId = req.params.id;
+  try {
+    const attempts = await db.examSession.findMany({
+      where: {
+        examAttempts: {
+          examId,
+        },
+      },
+      include: {
+        examAttempts: true,
+      },
+    });
+
+    const completedExamSession = attempts.find(
+      (att) => att.status === "PASSED"
+    );
+
+    if (completedExamSession) {
+      return res.status(403).json({
+        message: "Exam already completed",
+        status: "COMPLETED",
+        redirectTo: {
+          id: completedExamSession.id,
+          attemptId: completedExamSession.attemptId,
+          examId: completedExamSession.attemptId,
+        },
+      });
+    }
+    const attempt = attempts.length + 1;
+
+    if (attempt > 3) {
+      return res.status(400).json({
+        sucess: false,
+      });
+    }
+
+    const examInfo = await db.examAttempts.findFirst({
+      where: {
+        attempt: attempt,
+        examId,
+      },
+      include: {
+        examQuestions: true,
+      },
+    });
+
+    const totalQuestions = examInfo.examQuestions.length;
+
+    const course = await db.exam.findFirst({
+      where: {
+        id: examInfo.examId,
+      },
+
+      include: {
+        course: {
+          select: {
+            title: true,
+            thumbnail: true,
+            description: true,
+            level: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      sucess: true,
+      data: { ...examInfo, ...course.course, totalQuestions },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getExamSession = async (req, res, next) => {
   const attemptExamId = req.params.id;
   const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
-  console.log(attemptExamId, userId);
+
   try {
     const isActiveExamExists = await db.examSession.findFirst({
       where: {
@@ -177,12 +251,12 @@ exports.getExamSession = async (req, res, next) => {
         attemptId: {
           not: attemptExamId,
         },
+        status: "IN_PROGRESS",
       },
     });
 
     if (isActiveExamExists) {
-      console.log(" creating other the continue exam session");
-      return res.status(304).json({ sucess: false });
+      return res.status(304).json({ sucess: false, message: "" });
     }
 
     let attemptExam = await db.examSession.findFirst({
@@ -306,7 +380,7 @@ exports.getExamSession = async (req, res, next) => {
       attemptExam.endsAt,
       now
     );
-    console.log({ timeAnalaysis });
+
     res.status(200).json({
       message: "amaing projects",
       data: {
@@ -314,69 +388,6 @@ exports.getExamSession = async (req, res, next) => {
         ...timeAnalaysis,
         percent: Math.ceil((countAnwesres / formattedQuestions.length) * 100),
       },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getExamSessionAtake = async (req, res, next) => {
-  const examId = req.params.id;
-  try {
-    const attempts = await db.examSession.findMany({
-      where: {
-        examAttempts: {
-          examId,
-        },
-      },
-      include: {
-        examAttempts: true,
-      },
-    });
-
-    const attempt = attempts.length + 1;
-
-    if (attempt > 3) {
-      return res.status(400).json({
-        sucess: false,
-      });
-    }
-
-    const examInfo = await db.examAttempts.findFirst({
-      where: {
-        attempt: attempt,
-        examId,
-      },
-      include: {
-        examQuestions: true,
-      },
-    });
-
-    const totalQuestions = examInfo.examQuestions.length;
-
-    const course = await db.exam.findFirst({
-      where: {
-        id: examInfo.examId,
-      },
-
-      include: {
-        course: {
-          select: {
-            title: true,
-            thumbnail: true,
-            description: true,
-            level: true,
-            slug: true,
-          },
-        },
-      },
-    });
-
-    console.log(course);
-
-    return res.status(200).json({
-      sucess: true,
-      data: { ...examInfo, ...course.course, totalQuestions },
     });
   } catch (error) {
     next(error);
@@ -451,11 +462,15 @@ exports.calculateResult = async (req, res, next) => {
       where: {
         userId,
         attemptId: id,
+        status: "IN_PROGRESS",
+      },
+      include: {
+        user: true,
       },
     });
 
     if (!session) {
-      return res.status(400).json({ message: "" });
+      return res.status(404).json({ message: "" });
     }
 
     const currentTime = new Date();
@@ -526,9 +541,14 @@ exports.calculateResult = async (req, res, next) => {
       });
     });
 
-    const isFailed = Math.floor(allQuestions.length / 2) <= correctQuestions;
+    const isPass = correctQuestions >= Math.round(allQuestions.length / 2);
 
-    if (isFailed) {
+    let certUrl;
+    if (isPass) {
+      certUrl = await generateAndUploadCertificate(
+        session.user.firstName,
+        session.user.lastName
+      );
     }
 
     await db.examSession.update({
@@ -538,11 +558,19 @@ exports.calculateResult = async (req, res, next) => {
       data: {
         score: correctQuestions,
         submittedAt: currentTime,
-        status: isFailed ? "PASSED" : "FAILED",
+        status: isPass ? "PASSED" : "FAILED",
+        filename: isPass ? certUrl : null,
         over: true,
       },
     });
-    res.status(200).json({ message: "" });
+
+    res.status(200).json({
+      message: "",
+      sucess: true,
+      data: {
+        id: session.id,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -550,12 +578,16 @@ exports.calculateResult = async (req, res, next) => {
 
 exports.getResult = async (req, res, next) => {
   const id = req.params?.id || "fe7e34b1-f0cf-4ea1-884d-b2fb774d37c6";
-  const userId = req.user?.id || "kdkksksjsjssjks";
-
+  const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
   try {
     const session = await db.examSession.findUnique({
-      id,
-      userId,
+      where: {
+        id,
+        userId,
+        NOT: {
+          status: "IN_PROGRESS",
+        },
+      },
     });
 
     if (!session) {
@@ -564,9 +596,34 @@ exports.getResult = async (req, res, next) => {
         message: "Not found",
       });
     }
+
     const examQuestions = await db.examQuestions.count({
       where: {
         attemptId: session.attemptId,
+      },
+    });
+
+    const timeAnalaysis = calculateExamTimes(
+      session.startedAt,
+      session.endsAt,
+      session.submittedAt
+    );
+
+    const score = {
+      correctAnswer: session.score,
+      wrongAnswer: examQuestions - session.score,
+      totalQuestions: examQuestions,
+      scorePercentage: Math.round((session.score / examQuestions) * 100),
+    };
+
+    timeAnalaysis.rate = (score.correctAnswer * 60) / timeAnalaysis.usedTime;
+
+    res.status(200).json({
+      message: "status approved",
+      data: {
+        ...timeAnalaysis,
+        ...score,
+        status: session.status,
       },
     });
   } catch (error) {
