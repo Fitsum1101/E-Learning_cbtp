@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import QuestionSideBar from "../../components/exam/sidbar/SideBar";
@@ -12,9 +12,13 @@ const CourseExam = () => {
   const [questions, setQuestions] = useState(undefined);
   const [time, setTime] = useState(0);
 
+  const navigate = useNavigate();
+
   const params = useParams();
 
-  const { data, isSuccess, error } = useQuery({
+  console.log(params);
+
+  const { data, isSuccess, error, isLoading } = useQuery({
     queryKey: ["questions", params.id],
     queryFn: ({ queryKey }) =>
       api.get(`/api/exam/${queryKey[1]}/session/current`),
@@ -50,6 +54,13 @@ const CourseExam = () => {
   const { mutate: result } = useMutation({
     mutationKey: ["questionresult"],
     mutationFn: () => api.post(`api/exam/${params.id}/result`),
+    onSettled: (response) => {
+      const resultId = response.data?.data.id;
+
+      navigate(
+        `/course/${params?.slug}/exam/${params.examId}/result/${resultId}`
+      );
+    },
   });
 
   const { formattedTime, remainingTime } = useLearningTimer(time);
@@ -63,6 +74,7 @@ const CourseExam = () => {
           startsTime={formattedTime}
           remainingTime={remainingTime}
           onSubmit={result}
+          loading={isLoading}
           activeQuestion={selectedQuestion}
           handleActiveQuestion={(question) => setSelectedQuestion(question)}
         />

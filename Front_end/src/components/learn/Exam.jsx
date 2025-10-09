@@ -15,6 +15,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../services/api";
 import { useCourseContext } from "../../store/course/course-context";
+import { useEffect } from "react";
 
 const mockExamData = {
   courseTitle: "React Fundamentals",
@@ -107,13 +108,20 @@ const Exam = () => {
   const navigate = useNavigate();
   const { handleExamId } = useCourseContext();
 
-  const { data } = useQuery({
+  const { data, error } = useQuery({
     queryKey: ["exam-courses", examId],
     queryFn: ({ queryKey }) => api.get(`api/exam/${queryKey[1]}/start`),
     select: (response) => response.data.data,
+    throwOnError: false,
   });
 
-  console.log(data);
+  useEffect(() => {
+    if (error) {
+      const redirect = error.response?.data.redirectTo;
+      console.log(redirect);
+      navigate(`/result${redirect.id}`);
+    }
+  }, [error]);
 
   const startExam = () => {
     handleExamId(data.id);
@@ -137,11 +145,11 @@ const Exam = () => {
                       {data?.level}
                     </p>
                   </div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-balance mb-3">
+                  <h1 className="mb-3 text-3xl font-bold md:text-4xl text-balance">
                     Final Assessment
                   </h1>
-                  <p className="text-xl text-blue-100 flex items-center gap-2 mb-4">
-                    <BookOpen className="h-5 w-5" />
+                  <p className="flex items-center gap-2 mb-4 text-xl text-blue-100">
+                    <BookOpen className="w-5 h-5" />
                     {data?.title}
                   </p>
                   <p className="mb-4 text-blue-100 text-pretty">
@@ -151,6 +159,9 @@ const Exam = () => {
                     <div className="flex items-center gap-2">
                       <Timer className="w-4 h-4" />
                       {data?.duration} minutes
+                    </div>
+                    <div className="px-2 py-1 font-semibold text-white capitalize bg-green-400 border border-green-500 rounded-md text-md">
+                      attempt: {data?.attempt}
                     </div>
                   </div>
                 </div>
@@ -284,7 +295,7 @@ const Exam = () => {
                   variant="primary"
                   size="lg"
                   onClick={startExam}
-                  className="flex items-center  justify-center px-12 py-4 text-lg font-semibold text-white transition-all duration-200 transform shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:scale-105"
+                  className="flex items-center justify-center px-12 py-4 text-lg font-semibold text-white transition-all duration-200 transform shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:scale-105"
                 >
                   <FileText className="w-5 h-5 mr-2" />
                   Start Exam Now

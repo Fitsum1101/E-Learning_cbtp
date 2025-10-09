@@ -1,5 +1,3 @@
-import React from "react";
-import ExamResultSidbar from "../../components/examresult/Sidbar";
 import Overivew from "../../components/examresult/Headers/Overivew";
 import Button from "../../components/common/Button/Button";
 import {
@@ -9,13 +7,14 @@ import {
   CircleCheck,
   CircleX,
   Clock,
-  File,
   FileText,
-  FileWarningIcon,
-  MailWarningIcon,
 } from "lucide-react";
 import Analaysis from "../../ui/examresult/Analaysis";
 import LinearProgress from "@mui/material/LinearProgress";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import api from "../../services/api";
+import { formatTime } from "../../hooks/useLearningTimer";
 
 const CardContent = ({ number, text, sucess = true }) => {
   const className = sucess
@@ -38,6 +37,24 @@ const CardContent = ({ number, text, sucess = true }) => {
 };
 
 const ExamResult = () => {
+  const params = useParams();
+
+  let time = {};
+
+  const { data, isSuccess, error, isLoading } = useQuery({
+    queryKey: ["result", params.id],
+    queryFn: ({ queryKey }) => api.get(`/api/exam/${queryKey[1]}/result`),
+    select: (response) => response?.data?.data,
+  });
+
+  const isFailed = data?.status === "FAILED";
+
+  if (isSuccess) {
+    time.timeLimit = formatTime(data?.timeLimit);
+    time.usedTime = formatTime(data?.usedTime);
+    time.remainTime = formatTime(data?.remainTime);
+  }
+
   return (
     <div className="flex">
       <div className="flex flex-col justify-between h-full border-r border-blue-200 w-80 bg-blue-50 ">
@@ -47,12 +64,24 @@ const ExamResult = () => {
             <p className="items-center capitalize">reatc fundamental</p>
           </div>
         </div>
-        <div className="flex flex-col items-center justify-center gap-1 p-4 m-2 bg-red-200 border border-blue-100 rounded-xl">
+        <div
+          className={`flex flex-col items-center justify-center gap-1 p-4 m-2 ${
+            data?.status === "FAILED" ? "bg-red-200" : "bg-green-200"
+          }  border border-blue-100 rounded-xl`}
+        >
           <CircleX size={35} className="text-red-500" />
-          <h3 className="text-3xl font-semibold text-red-900 ">60%</h3>
-          <p className="text-sm font-semibold text-red-700">3/5 correct</p>
-          <p className="px-2 font-semibold text-white bg-red-600 rounded-sm text-md">
-            Failed
+          <h3 className="t~ext-3xl font-semibold text-red-900 ">
+            {data?.scorePercentage}%
+          </h3>
+          <p className="text-sm font-semibold text-red-700">
+            {data?.correctAnswer}/{data?.totalQuestions} correct
+          </p>
+          <p
+            className={`px-2 font-semibold text-white ${
+              isFailed ? "bg-red-600" : "bg-green-600"
+            }  rounded-sm text-md`}
+          >
+            {isFailed ? "failed" : "pass"}
           </p>
         </div>
         <div className="flex items-center justify-center gap-4 p-3 border-b border-blue-200">
@@ -73,8 +102,14 @@ const ExamResult = () => {
           </div>
         )}
         <div className="flex flex-col items-center gap-2 pb-2 mx-2 my-2 border-t border-blue-200">
-          <Button className="w-full py-1 text-green-900 border border-green-400 hover:bg-green-400">
-            Print Result
+          <Button
+            className={`w-full py-1 border ${
+              !isFailed
+                ? "text-green-900  border-green-400 hover:bg-green-400"
+                : "text-red-900  border-red-400 hover:bg-red-400"
+            } `}
+          >
+            Print Resul
           </Button>
         </div>
       </div>
@@ -91,19 +126,40 @@ const ExamResult = () => {
             <div className="flex flex-col gap-3 p-5 mt-8 font-medium text-gray-700">
               <QuestionData
                 isTotalQuestions={true}
-                number={10}
+                number={data?.totalQuestions}
                 text={"Total Questions"}
               />
-              <QuestionData number={5} text={"Correct Answers:"} />
               <QuestionData
-                number={5}
+                number={data?.correctAnswer}
+                text={"Correct Answers:"}
+              />
+              <QuestionData
+                number={data?.wrongAnswer}
                 text={"Incorrect Answers:"}
                 isCorrect={false}
               />
             </div>
-            <div className="flex items-center justify-between p-3 mx-4 my-2 border-t-2 border-green-200 rounded-lg bg-green-50">
-              <span className="font-semibold text-green-700">Final Score:</span>
-              <span className="text-2xl font-bold text-green-900">{40}%</span>
+            <div
+              className={`flex items-center justify-between p-3 mx-4 my-2 border-t-2   ${
+                !isFailed
+                  ? "border-green-200 bg-green-50"
+                  : "border-red-200 bg-red-50"
+              } rounded-lg `}
+            >
+              <span
+                className={`font-semibold ${
+                  !isFailed ? "text-green-700" : "text-red-700"
+                } `}
+              >
+                Final Score:
+              </span>
+              <span
+                className={`text-2xl font-bold ${
+                  !isFailed ? "text-green-900" : "text-red-900"
+                } `}
+              >
+                {data?.scorePercentage}%
+              </span>
             </div>
           </Analaysis>
           <Analaysis>
@@ -114,15 +170,20 @@ const ExamResult = () => {
               </h2>
             </div>
             <div className="flex flex-col gap-3 p-5 mt-8 font-medium text-gray-700">
-              <TimeData text={"Time Limit"} time={"30 min "} />
-              <TimeData text={"Time Used"} time={"20 min "} />
-              <TimeData text={"Time Remaining"} time={"50 min "} />
+              <TimeData text={"Time Limit"} time={`${time?.timeLimit} min`} />
+              <TimeData text={"Time Used"} time={`${time?.usedTime} min`} />
+              <TimeData
+                text={"Time Remaining"}
+                time={`${time?.remainTime} min`}
+              />
             </div>
             <div className="flex items-center justify-between p-3 mx-4 my-2 border-t-2 border-blue-200 rounded-lg bg-blue-50">
               <span className="font-semibold text-blue-700">
-                Avg per Question:
+                Avg per Question: {data?.rate} per minute
               </span>
-              <span className="text-2xl font-bold text-blue-900">{40}%</span>
+              {/* <span className="text-xl font-bold text-blue-900">
+                {data?.rate} per minute
+              </span> */}
             </div>
           </Analaysis>
           <Analaysis>
@@ -167,6 +228,41 @@ const ExamResult = () => {
               />
             </div>
           </Analaysis>
+        </div>
+        <div className="flex flex-col items-center m-5">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "100vh",
+              backgroundColor: "#f0f0f0",
+              padding: "20px",
+            }}
+          >
+            <img
+              src={
+                "https://res.cloudinary.com/dofqz9ryj/image/upload/v1759878704/certificates/certificate-Test-User.png"
+              }
+              alt="Certificate"
+              style={{
+                maxWidth: "100%", // responsive width
+                height: "auto", // maintain aspect ratio
+                border: "2px solid #ccc", // optional border
+                borderRadius: "10px", // rounded corners
+                boxShadow: "0 4px 15px rgba(0,0,0,0.2)", // subtle shadow
+              }}
+            />
+          </div>
+
+          {/* Download button */}
+          <a
+            // href={certificateUrl}
+            download
+            className="px-4 py-2 mt-4 text-white bg-blue-600 rounded hover:bg-blue-700"
+          >
+            Download Certificate
+          </a>
         </div>
       </div>
     </div>

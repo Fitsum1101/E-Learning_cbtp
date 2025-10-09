@@ -13,8 +13,6 @@ export function formatTime(seconds) {
 export function useLearningTimer(expiryTime) {
   const [remainTime, setRemaining] = useState(expiryTime);
 
-  console.log({ remainTime });
-
   useEffect(() => {
     if (expiryTime == undefined) return;
 

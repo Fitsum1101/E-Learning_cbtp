@@ -19,6 +19,7 @@ const QuestionSideBar = ({
   percent,
   startsTime,
   onSubmit,
+  isLoading,
 }) => {
   const isAllCourseAnswered =
     questions?.findIndex((que) => !("isAnswered" in que)) !== -1;
@@ -80,11 +81,11 @@ const QuestionSideBar = ({
       </div>
       <div className="flex items-center justify-center p-3 mt-2 text-white bg-blue-100 p ">
         <Button
-          disabled={isAllCourseAnswered}
+          disabled={isAllCourseAnswered || isLoading}
           onClick={onSubmit}
           className={`w-full py-1 text-center  bg-blue-600 hover:bg-blue-700 rounded-xl `}
         >
-          Submit Exam
+          {isLoading ? "sumbiting..." : "Submit Exam"}
         </Button>
       </div>
     </div>
