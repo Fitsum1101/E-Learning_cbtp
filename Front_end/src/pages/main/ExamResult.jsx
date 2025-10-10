@@ -55,6 +55,10 @@ const ExamResult = () => {
     time.remainTime = formatTime(data?.remainTime);
   }
 
+  if (isLoading) {
+    <h1>LOADING .........</h1>;
+  }
+
   return (
     <div className="flex">
       <div className="flex flex-col justify-between h-full border-r border-blue-200 w-80 bg-blue-50 ">
