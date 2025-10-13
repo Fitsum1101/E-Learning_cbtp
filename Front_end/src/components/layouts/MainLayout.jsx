@@ -22,13 +22,13 @@ const MainLayout = () => {
   const isLoading = navigation.state === "loading";
 
   return (
-    <div className="relative min-h-screen bg-gray-50">
+    <div className="relative min-h-screen ">
       <NavBar />
 
       {isLoading && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm">
           <ClipLoader color="#2563eb" size={60} />
-          <p className="mt-4 text-blue-600 font-semibold text-lg">
+          <p className="mt-4 text-lg font-semibold text-blue-600">
             Loading, please wait...
           </p>
         </div>

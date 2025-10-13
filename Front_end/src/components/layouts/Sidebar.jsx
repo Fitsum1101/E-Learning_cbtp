@@ -1,10 +1,11 @@
+import { CircleUserIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const role = "admin";
 
 const Sidebar = () => {
   return (
-    <div className="w-64 bg-white hidden lg:block  text-[#000] h-full p-5">
+    <div className="w-64 hidden  border-r border-gray-200 lg:block  text-[#000] h-full p-5">
       <div className="mb-3">
         <div className="flex items-center mb-2 text-md">
           <i className="mr-3 text-lg text-gray-500 fa-solid fa-tachometer-alt"></i>
@@ -66,6 +67,16 @@ const Sidebar = () => {
               </NavLink>
             </div>
             <div className="flex items-center text-md ">
+              <CircleUserIcon className="w-6 h-6 mr-3 " />
+              <NavLink
+                style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
+                className=""
+                to="/dashboard/admin/avaters"
+              >
+                Avaters
+              </NavLink>
+            </div>
+            <div className="flex items-center text-md ">
               <i className="mr-3 text-lg text-gray-500 fa-regular fa-clipboard"></i>
               <NavLink
                 style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
@@ -113,6 +124,16 @@ const Sidebar = () => {
                 to="/dashboard/admin/students"
               >
                 Students
+              </NavLink>
+            </div>
+            <div className="flex items-center text-md ">
+              <i className="mr-3 text-lg text-gray-400 fa-solid fa-user-graduate"></i>
+              <NavLink
+                style={({ isActive }) => (isActive ? { color: "#3b82f6" } : {})}
+                className=""
+                to="/dashboard/admin/analaytices"
+              >
+                analaytices
               </NavLink>
             </div>
           </div>

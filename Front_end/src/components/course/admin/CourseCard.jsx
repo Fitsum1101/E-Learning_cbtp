@@ -1,12 +1,12 @@
 import { Calendar, Users, Pencil, Eye, Bookmark, Trash2 } from "lucide-react";
 import Button from "../../common/Button/Button";
-import { Card, CardContent, Badge } from "@mui/material";
 import { Link } from "react-router-dom";
 
 export function CourseCard({ courses }) {
+  console.log({ id: courses.id });
   return (
     <div className="overflow-hidden text-gray-700 transition-shadow bg-white border border-gray-200 rounded-md shadow-md shadow-gray-200 hover:shadow-lg">
-      <Link href={`/courses/${courses.id}`}>
+      <Link to={`${courses.id}`}>
         <div className="relative w-full overflow-hidden aspect-video bg-muted">
           <img
             src={
@@ -19,7 +19,7 @@ export function CourseCard({ courses }) {
         </div>
       </Link>
       <div className="p-6 text-gray-500">
-        <Link href={`/courses/${courses.id}`}>
+        <Link to={`${courses.id}`}>
           <h3 className="mb-2 text-xl font-semibold text-black transition-colors hover:text-primary">
             {courses.title}
           </h3>
