@@ -19,6 +19,13 @@ import ExamPage from "../pages/dashboard/admin/ExamPage";
 import CertificatePage from "../pages/dashboard/student/Certificate";
 import CourseExam from "../pages/main/CourseExam";
 import ExamResult from "../pages/main/ExamResult";
+import AdminCourseDetail from "../components/course/admin/CourseDetail";
+import StudentsPage from "../pages/dashboard/student/Student";
+import StudentDetailPage from "../pages/dashboard/student/StudentDetail";
+import Analaytices from "../pages/dashboard/admin/Analaytices";
+import ResourcesPage from "../pages/dashboard/admin/Resources";
+import ResourcesAddPage from "../pages/dashboard/admin/ResourcesAddPage";
+import AvatersPage from "../pages/dashboard/admin/Avaters";
 
 export const router = createBrowserRouter([
   {
@@ -61,12 +68,46 @@ export const router = createBrowserRouter([
                 element: <Dashboard />,
               },
               {
+                path: "students",
+                element: <StudentsPage />,
+              },
+              {
+                path: "students/:id",
+                element: <StudentDetailPage />,
+              },
+              {
                 path: "courses",
-                element: <Course />,
+                children: [
+                  {
+                    index: true,
+                    element: <Course />,
+                  },
+                  {
+                    path: ":id",
+                    element: <AdminCourseDetail />,
+                  },
+                ],
+              },
+              {
+                path: "analaytices",
+                element: <Analaytices />,
               },
               {
                 path: "lessons",
                 element: <Lessons />,
+              },
+              {
+                path: "resources",
+                children: [
+                  {
+                    index: true,
+                    element: <ResourcesPage />,
+                  },
+                  {
+                    path: "add",
+                    element: <ResourcesAddPage />,
+                  },
+                ],
               },
               {
                 path: "courses/add",
@@ -79,6 +120,10 @@ export const router = createBrowserRouter([
               {
                 path: "exam",
                 element: <ExamPage />,
+              },
+              {
+                path: "avaters",
+                element: <AvatersPage />,
               },
             ],
           },
