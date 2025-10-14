@@ -166,23 +166,26 @@ exports.deleteExamQuestions = async (req, res, next) => {
 
 exports.getExamSessionAtake = async (req, res, next) => {
   const examId = req.params.id;
+  const userId = req.user?.id || "94b57e76-04a9-49bd-9547-8dc14e17e337";
   try {
     const attempts = await db.examSession.findMany({
       where: {
         examAttempts: {
           examId,
         },
+        userId,
       },
       include: {
         examAttempts: true,
       },
     });
 
-    const completedExamSession = attempts.find(
-      (att) => att.status === "PASSED"
+    const completedExamSession = attempts.find((att) =>
+      ["PASSED"].includes(att.status)
     );
 
     if (completedExamSession) {
+      console.log(completedExamSession);
       return res.status(403).json({
         message: "Exam already completed",
         status: "COMPLETED",
@@ -193,6 +196,7 @@ exports.getExamSessionAtake = async (req, res, next) => {
         },
       });
     }
+
     const attempt = attempts.length + 1;
 
     if (attempt > 3) {
@@ -211,7 +215,7 @@ exports.getExamSessionAtake = async (req, res, next) => {
       },
     });
 
-    const totalQuestions = examInfo.examQuestions.length;
+    const totalQuestions = examInfo.examQuestions?.length && [];
 
     const course = await db.exam.findFirst({
       where: {
@@ -262,6 +266,7 @@ exports.getExamSession = async (req, res, next) => {
     let attemptExam = await db.examSession.findFirst({
       where: {
         attemptId: attemptExamId,
+        userId,
       },
     });
 
@@ -571,6 +576,34 @@ exports.calculateResult = async (req, res, next) => {
         id: session.id,
       },
     });
+
+    isPass &&
+      (await db.$transaction(
+        [
+          db.examAnswer.deleteMany({
+            where: {
+              ExamSession: {
+                userId,
+                examAttempts: {
+                  NOT: {
+                    id,
+                  },
+                },
+              },
+            },
+          }),
+        ],
+        await db.examSession.deleteMany({
+          where: {
+            userId,
+            examAttempts: {
+              NOT: {
+                id,
+              },
+            },
+          },
+        })
+      ));
   } catch (error) {
     next(error);
   }
@@ -591,7 +624,7 @@ exports.getResult = async (req, res, next) => {
     });
 
     if (!session) {
-      res.status(404).json({
+      return res.status(404).json({
         sucess: false,
         message: "Not found",
       });

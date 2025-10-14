@@ -203,23 +203,23 @@ model Progress {
   subChapter   SubChapter  @relation(fields: [subChapterId], references: [id])
 }
 
-model AvatarCategory {
-  id        String   @id @default(uuid())
-  style      String   
-  createdAt DateTime @default(now())
-  Avatar    Avatar[]
-}
 
 model Avatar {
-   id        String   @id @default(uuid())
-   seed      String
-   styleId   String
-   courseComplete Int @default(0)
-   courseEnrolled Int @default(0)
-   courseCertificates Int @default(0)
-   createdAt DateTime @default(now())
-   AvatarCategory    AvatarCategory @relation(fields: [styleId], references: [id])
+  id              String   @id @default(uuid())
+  name            String
+  url             String  
+  createdBy       String
+  isFree          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  
+  minCertificates Int?     @default(0)
+  minEnrollments  Int?     @default(0)
+  minCompleted    Int?     @default(0)
+
+  rarity          String?  
 }
+
 
 
 model Question {
