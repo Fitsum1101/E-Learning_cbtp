@@ -26,6 +26,8 @@ import Analaytices from "../pages/dashboard/admin/Analaytices";
 import ResourcesPage from "../pages/dashboard/admin/Resources";
 import ResourcesAddPage from "../pages/dashboard/admin/ResourcesAddPage";
 import AvatersPage from "../pages/dashboard/admin/Avaters";
+import EditAvaterPage from "../pages/dashboard/admin/EditAvater";
+import ViewAvater from "../pages/dashboard/admin/ViewAvater";
 
 export const router = createBrowserRouter([
   {
@@ -123,7 +125,11 @@ export const router = createBrowserRouter([
               },
               {
                 path: "avaters",
-                element: <AvatersPage />,
+                children: [
+                  { index: true, element: <AvatersPage /> },
+                  { path: "edit/:id", element: <EditAvaterPage /> },
+                  { path: "view", element: <ViewAvater /> },
+                ],
               },
             ],
           },

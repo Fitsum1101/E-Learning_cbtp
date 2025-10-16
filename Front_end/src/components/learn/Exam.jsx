@@ -9,7 +9,7 @@ import {
   Timer,
   Users,
 } from "lucide-react";
-import { Link, useNavigate, useNavigation, useParams } from "react-router-dom";
+import { useNavigate, useNavigation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import api from "../../services/api";
 import { useCourseContext } from "../../store/course/course-context";
@@ -129,7 +129,7 @@ const Exam = () => {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center h-screen">
         <ClipLoader color="#2563eb" size={60} />
       </div>
     );
@@ -183,12 +183,6 @@ const Exam = () => {
                       />
                     </div>
                   </div>
-                  <Button
-                    onClick={showResult}
-                    className="border border-y-amber-400 "
-                  >
-                    RESULT
-                  </Button>
                 </div>
               </div>
             </div>

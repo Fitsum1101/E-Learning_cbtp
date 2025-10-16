@@ -58,6 +58,7 @@ exports.createCourse = async (req, res, next) => {
         message: "Validation failed",
         errors: existingFields,
       });
+
       isThumbnailExists && deleteFile(makePath(req.file.path));
 
       return;

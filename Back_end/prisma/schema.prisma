@@ -207,11 +207,11 @@ model Progress {
 model Avatar {
   id              String   @id @default(uuid())
   name            String
-  url             String  
-  createdBy       String
+  url             String   @unique 
+  style           String   @default("avataaars")
   isFree          Boolean  @default(false)
   createdAt       DateTime @default(now())
-
+  
   
   minCertificates Int?     @default(0)
   minEnrollments  Int?     @default(0)

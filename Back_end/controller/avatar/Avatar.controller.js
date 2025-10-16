@@ -1,38 +1,71 @@
 const db = require("../../config/db");
+const validate = require("../../util/validate.util");
 
 exports.getAvatars = async (req, res, next) => {
   try {
-    const avatars = await db.avatar.findMany({
-      include: {
-        AvatarCategory: {
-          select: {
-            style: true,
-          },
-        },
+    const avatars = await db.avatar.findMany();
+
+    res.status(200).json({
+      sucess: true,
+      data: avatars.map((ava) => ({ ...ava, seed: ava.url.split("=")[1] })),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAvaterDatas = async (req, res, next) => {
+  try {
+    const totalAvatars = await db.avatar.count();
+    const activeAvaters = await db.avatar.count({
+      where: {
+        isFree: false,
       },
     });
-    console.log(avatars);
-    res.json({ message: "Avatar route", data: avatars });
+    const lockedAvaters = await db.avatar.count({
+      where: {
+        isFree: true,
+      },
+    });
+    res.status(200).json({
+      success: true,
+      data: {
+        "Total Avatars": totalAvatars,
+        "Locked Avatars": lockedAvaters,
+        "Active Avatars": activeAvaters,
+      },
+    });
   } catch (error) {
     next(error);
   }
 };
 
 exports.createAvater = async (req, res, next) => {
-  const { url, name, isFree, minCertificates, minEnrollments, minCompleted } =
-    req.body;
-
+  const { url, name, minCertificates, minCompleted } = req.body;
+  const isFree = +minCertificates === +minCompleted;
   try {
+    const existingFields = validate(req);
+
+    if (Object.keys(existingFields).length > 0)
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: existingFields,
+      });
+
     const avater = await db.avatar.create({
       data: {
         isFree,
-        minCertificates,
-        minCompleted,
-        minEnrollments,
+        url,
+        minCertificates: +minCertificates,
+        minCompleted: +minCompleted,
         name,
       },
     });
-    res.staus(200).json({
+
+    console.log({ avater });
+
+    res.status(200).json({
       message: "avater created sucessfuly",
       data: avater,
     });
@@ -70,13 +103,16 @@ exports.getAvaterById = async (req, res, next) => {
   const { id } = req.params;
   try {
     const avater = await db.avatar.findUnique({
-      id,
+      where: { id },
     });
+
     res.status(200).json({
       message: " data feched by the user",
-      data: avater,
+      data: { ...avater, seed: avater.url.split("=")[1] },
     });
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 };
 exports.deleteAvaterById = async (req, res, next) => {
   const { id } = req.params;

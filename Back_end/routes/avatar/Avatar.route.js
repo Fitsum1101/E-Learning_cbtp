@@ -45,11 +45,18 @@ const createAvatarValidator = [
 
   body("name").custom(async (value) => {
     const existing = await db.avatar.findFirst({ where: { name: value } });
+    console.log({ existing });
     if (existing) throw new Error("Avatar name already exists");
     return true;
   }),
 
   body("url").custom(async (value) => {
+    const isHaveSeed = value.split("=")[1].trim().length > 0;
+    console.log({ isHaveSeed });
+    if (!isHaveSeed) {
+      throw new Error("please instert valid seed value!!");
+    }
+
     const existing = await db.avatar.findFirst({ where: { url: value } });
     if (existing) throw new Error("Avatar URL already exists");
     return true;
@@ -97,7 +104,9 @@ const createAvatarValidator = [
 
 router.get("/avatar", avatarController.getAvatars);
 
-router.post("/avatar", avatarController.createAvater);
+router.post("/avatar", createAvatarValidator, avatarController.createAvater);
+
+router.get("/avatar/info", avatarController.getAvaterDatas);
 
 router.put("/avatar/:id", avatarController.updateAvater);
 

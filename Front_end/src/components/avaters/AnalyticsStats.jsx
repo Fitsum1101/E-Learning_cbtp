@@ -1,27 +1,48 @@
 import { Card } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { Users, CheckCircle, Lock } from "lucide-react";
+import api from "../../services/api";
 
-const stats = [
+let stats = [
   {
     title: "Total Avatars",
-    value: "48",
+    value: 0,
     icon: Users,
     change: "+4 this month",
   },
   {
     title: "Active Avatars",
-    value: "32",
+    value: 0,
     icon: CheckCircle,
     change: "Available to unlock",
   },
   {
     title: "Locked Avatars",
-    value: "16",
+    value: 0,
     icon: Lock,
     change: "Require achievements",
   },
 ];
+
+const changeStates = (bstates) => {
+  stats = stats.map((st) => {
+    console.log({ bstates });
+    st.value = bstates[st.title] || 0;
+    return st;
+  });
+};
+
 export default function AvatarsStats() {
+  const { data } = useQuery({
+    queryKey: "avaterIfo",
+    queryFn: () => api.get("api/avatar/info"),
+    select: (response) => {
+      changeStates(response.data?.data);
+      return response.data?.data;
+    },
+    staleTime: () => "static",
+  });
+
   return (
     <div className="grid gap-4 mb-8 md:grid-cols-3">
       {stats.map((stat) => {
@@ -39,7 +60,7 @@ export default function AvatarsStats() {
                   {stat.title}
                 </p>
                 <p className="text-3xl font-bold text-foreground">
-                  {stat.value}
+                  {data ? data[stat.title] : 0}
                 </p>
                 <p className="text-xs text-muted-foreground">{stat.change}</p>
               </div>

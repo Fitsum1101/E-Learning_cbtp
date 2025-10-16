@@ -1,22 +1,18 @@
 import { Card } from "@mui/material";
 import { Eye, Pencil, Trash2, Lock, CheckCircle } from "lucide-react";
 import Button from "../common/Button/Button";
+import { Link } from "react-router-dom";
 
 const AvatarCard = ({ avatar }) => {
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-lg">
       <div className="p-6">
-        {/* Avatar Preview */}
         <div className="flex justify-center mb-4">
           <div className="relative w-32 h-32 p-4 bg-gray-100 rounded-full">
-            <img
-              src={avatar.previewUrl || "/placeholder.svg"}
-              alt={avatar.name}
-              className="w-full h-full"
-            />
+            <img src={avatar.url} alt={avatar.name} className="w-full h-full" />
             {/* Status Badge */}
             <div className="absolute -top-2 -right-2">
-              {avatar.status === "active" ? (
+              {avatar.isFree ? (
                 <div className="bg-green-500 text-white rounded-full p-1.5">
                   <CheckCircle className="w-4 h-4" />
                 </div>
@@ -40,11 +36,34 @@ const AvatarCard = ({ avatar }) => {
             </p>
           </div>
 
-          <div className="p-3 bg-gray-100 rounded-lg">
-            <p className="mb-1 text-xs font-medium text-muted-foreground">
-              Unlock Rule
+          <div
+            className={`p-3 ${
+              avatar.isFree ? "bg-green-200" : "bg-orange-200"
+            } rounded-lg`}
+          >
+            <p className="mb-1 text-xs font-medium ">
+              {avatar.isFree ? "Free to use" : "unlock rule"}
             </p>
-            <p className="text-sm text-foreground">{avatar.unlockRule}</p>
+            {!avatar.isFree && (
+              <div>
+                {avatar.minCompleted && (
+                  <p className="flex items-center text-xs font-medium ">
+                    Certifcate needed to :
+                    <span className="flex items-center justify-center w-5 h-5 ml-2 font-medium text-center bg-orange-500 rounded-full">
+                      {avatar.minCompleted}
+                    </span>
+                  </p>
+                )}
+                {avatar.minCompleted && (
+                  <p className="flex items-center text-xs font-medium ">
+                    Total course thet need to be meet:
+                    <span className="flex items-center justify-center w-5 h-5 ml-2 font-medium text-center bg-orange-500 rounded-full">
+                      {avatar.minCompleted}
+                    </span>
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-between text-xs">
@@ -55,16 +74,19 @@ const AvatarCard = ({ avatar }) => {
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-2">
-          <Button className="flex items-center px-2 py-1 text-sm border border-gray-300 rounded-md hover:bg-blue-50 ">
-            <Eye className="w-4 h-4 mr-2" />
-            View
-          </Button>
-          <Button className="flex items-center text-sm border border-gray-300 rounded-md hover:bg-blue-50 ">
-            <Pencil className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
+          <Link to={`view/${avatar.id}`}>
+            <Button className="flex items-center px-2 py-1 text-sm border border-gray-300 rounded-md hover:bg-blue-50 ">
+              <Eye className="w-4 h-4 mr-2" />
+              View
+            </Button>
+          </Link>
+          <Link to={`edit/${avatar.id}`}>
+            <Button className="flex items-center text-sm border border-gray-300 rounded-md hover:bg-blue-50 ">
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+          </Link>
           <Button className="flex items-center text-sm border border-gray-300 rounded-md hover:bg-blue-50 ">
             <Trash2 className="w-4 h-4" />
           </Button>
