@@ -1,11 +1,17 @@
-// import { AdminSidebar } from "@/components/admin-sidebar";
-// import { AvatarGenerator } from "@/components/avatar-generator";
+import { useQuery } from "@tanstack/react-query";
 
 import AnalyticsAvaterStats from "../../../components/avaters/AnalyticsStats";
 import AvatarGenerator from "../../../components/avaters/AvatarGenerator";
 import AvatarsList from "../../../components/avaters/AvatarsList";
+import api from "../../../services/api";
 
 export default function AvatarsPage() {
+  const { data: avaters } = useQuery({
+    queryKey: ["getAvaters"],
+    queryFn: () => api.get("api/avatar"),
+    select: (response) => response.data?.data,
+  });
+
   return (
     <>
       <div className="min-h-screen bg-background ">
@@ -21,7 +27,7 @@ export default function AvatarsPage() {
 
           <AvatarGenerator />
           <AnalyticsAvaterStats />
-          <AvatarsList />
+          <AvatarsList avaters={avaters} />
         </div>
       </div>
     </>
