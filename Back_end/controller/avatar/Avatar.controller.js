@@ -41,8 +41,9 @@ exports.getAvaterDatas = async (req, res, next) => {
 };
 
 exports.createAvater = async (req, res, next) => {
-  const { url, name, minCertificates, minCompleted } = req.body;
+  const { url, name, minCertificates, minCompleted, style } = req.body;
   const isFree = +minCertificates === +minCompleted;
+  console.log({ style });
   try {
     const existingFields = validate(req);
 
@@ -60,6 +61,7 @@ exports.createAvater = async (req, res, next) => {
         minCertificates: +minCertificates,
         minCompleted: +minCompleted,
         name,
+        style,
       },
     });
 
@@ -75,19 +77,27 @@ exports.createAvater = async (req, res, next) => {
 };
 
 exports.updateAvater = async (req, res, next) => {
-  const id = req.params;
-  const { url, name, isFree, minCertificates, minEnrollments, minCompleted } =
-    req.body;
+  const { id } = req.params;
+  const { url, name, minCertificates, minCompleted, style } = req.body;
   try {
+    const existingFields = validate(req);
+
+    if (Object.keys(existingFields).length > 0)
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: existingFields,
+      });
+
     const avater = await db.avatar.update({
       where: { id },
       data: {
         url,
         name,
-        isFree,
-        minCertificates,
-        minEnrollments,
-        minCompleted,
+        minCertificates: +minCertificates,
+        minCompleted: +minCompleted,
+        style,
+        isFree: +minCertificates === +minCompleted && !+minCertificates,
       },
     });
     res.status(200).json({

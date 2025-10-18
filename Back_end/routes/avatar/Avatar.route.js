@@ -1,4 +1,4 @@
-const { body } = require("express-validator");
+const { body, param } = require("express-validator");
 const express = require("express");
 
 const avatarController = require("../../controller/avatar/Avatar.controller");
@@ -18,11 +18,6 @@ const sharedRules = [
     .withMessage("Avatar URL is required")
     .isURL()
     .withMessage("Invalid avatar URL"),
-
-  body("isFree")
-    .optional()
-    .isBoolean()
-    .withMessage("isFree must be a boolean value"),
 
   body("minCertificates")
     .optional()
@@ -63,44 +58,44 @@ const createAvatarValidator = [
   }),
 ];
 
-// const updateAvatarValidator = [
-//   param("id")
-//     .notEmpty()
-//     .withMessage("Avatar ID is required")
-//     .isUUID()
-//     .withMessage("Invalid avatar ID format")
-//     .custom(async (value) => {
-//       const avatar = await db.avatar.findUnique({ where: { id: value } });
-//       if (!avatar) {
-//         throw new Error("Avatar not found");
-//       }
-//       return true;
-//     }),
+const updateAvatarValidator = [
+  param("id")
+    .notEmpty()
+    .withMessage("Avatar ID is required")
+    .isUUID()
+    .withMessage("Invalid avatar ID format")
+    .custom(async (value) => {
+      const avatar = await db.avatar.findUnique({ where: { id: value } });
+      if (!avatar) {
+        throw new Error("Avatar not found");
+      }
+      return true;
+    }),
 
-//   ...sharedRules,
+  ...sharedRules,
 
-//   body("name").custom(async (value, { req }) => {
-//     const existing = await db.avatar.findFirst({
-//       where: {
-//         name: value,
-//         NOT: { id: req.params.id },
-//       },
-//     });
-//     if (existing) throw new Error("Avatar name already exists");
-//     return true;
-//   }),
+  body("name").custom(async (value, { req }) => {
+    const existing = await db.avatar.findFirst({
+      where: {
+        name: value,
+        NOT: { id: req.params.id },
+      },
+    });
+    if (existing) throw new Error("Avatar name already exists");
+    return true;
+  }),
 
-//   body("url").custom(async (value, { req }) => {
-//     const existing = await db.avatar.findFirst({
-//       where: {
-//         url: value,
-//         NOT: { id: req.params.id },
-//       },
-//     });
-//     if (existing) throw new Error("Avatar URL already exists");
-//     return true;
-//   }),
-// ];
+  body("url").custom(async (value, { req }) => {
+    const existing = await db.avatar.findFirst({
+      where: {
+        url: value,
+        NOT: { id: req.params.id },
+      },
+    });
+    if (existing) throw new Error("Avatar URL already exists");
+    return true;
+  }),
+];
 
 router.get("/avatar", avatarController.getAvatars);
 
@@ -108,7 +103,7 @@ router.post("/avatar", createAvatarValidator, avatarController.createAvater);
 
 router.get("/avatar/info", avatarController.getAvaterDatas);
 
-router.put("/avatar/:id", avatarController.updateAvater);
+router.put("/avatar/:id", updateAvatarValidator, avatarController.updateAvater);
 
 router.get("/avatar/:id", avatarController.getAvaterById);
 

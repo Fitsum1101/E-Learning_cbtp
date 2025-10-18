@@ -17,6 +17,7 @@ const progressRouter = require("./routes/progress/progress.routes");
 const bookmarkRoutes = require("./routes/Bookmarks/bookmark.routes");
 const questionRouter = require("./routes//questions/questions.route");
 const examRoutes = require("./routes/exam/exam.routes");
+const db = require("./config/db");
 
 const app = express();
 
@@ -49,3 +50,38 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+db.enrollment
+  .aggregate({
+    _count: {
+      userId: true,
+    },
+    _avg: {
+      courseProgress: true,
+    },
+    where: {
+      course: {
+        adminId: "94b57e76-04a9-49bd-9547-8dc14e17e337",
+      },
+    },
+  })
+  .then((data) => console.log(data))
+  .catch((err) => console.log(err));
+
+db.enrollment
+  .groupBy({
+    by: "userId",
+    _count: {
+      userId: true,
+    },
+    _avg: {
+      courseProgress: true,
+    },
+    where: {
+      course: {
+        adminId: "94b57e76-04a9-49bd-9547-8dc14e17e337",
+      },
+    },
+  })
+  .then((data) => console.log("group by", data))
+  .catch((err) => console.log(err));

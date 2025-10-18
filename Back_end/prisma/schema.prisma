@@ -26,7 +26,7 @@ model User {
   creator       User?         @relation("UserCreator", fields: [createdBy], references: [id])
   createdUsers  User[]        @relation("UserCreator")
 
- 
+  course        Course[]
   enrollments   Enrollment[]
   ratings       Rating[]
   testimonials  Testimonial[]
@@ -60,7 +60,7 @@ model Course {
   category      CourseCategory @relation(fields: [categoryId], references: [id])
   enrollments   Enrollment[]
  
-
+  user          User           @relation(fields: [adminId],references: [id])
   chapters      Chapter[]
   ratings       Rating[]
   testimonials  Testimonial[]
@@ -109,6 +109,7 @@ model Enrollment {
   courseId   String
   enrolledAt DateTime @default(now())
   completed  Boolean  @default(false)
+  courseProgress Int  @default(0)
 
   user       User     @relation(fields: [userId], references: [id])
   course     Course   @relation(fields: [courseId], references: [id])
