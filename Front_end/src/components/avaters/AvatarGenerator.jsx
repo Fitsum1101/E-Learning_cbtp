@@ -7,6 +7,11 @@ import Button from "../common/Button/Button";
 import Input from "../common/Input/Input";
 import api from "../../services/api";
 import { toast } from "react-toastify";
+import {
+  AvaterUrl,
+  isErrorExistsfUN,
+  isValidNumber,
+} from "../../utils/editAvater";
 
 const avatarStyles = [
   { value: "adventurer", label: "Adventurer" },
@@ -20,21 +25,6 @@ const avatarStyles = [
   { value: "personas", label: "Personas" },
   { value: "pixel-art", label: "Pixel Art" },
 ];
-
-const isErrorExistsfUN = (data) => {
-  if (!data || data.length < 3) {
-    return true;
-  }
-  return false;
-};
-
-const isValidNumber = (number) => {
-  if (!number || number < 0) return false;
-  return true;
-};
-
-const AvaterUrl = (style, seed) =>
-  `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(seed)}`;
 
 export default function AvatarGenerator() {
   const [style, setStyle] = useState("avataaars");
@@ -100,10 +90,10 @@ export default function AvatarGenerator() {
     if (isErrorExistsfUN(seed))
       formErrors["avatar-seed"] = "seed name needs to be more that 10";
     if (!freeAvater) {
-      if (!isValidNumber(+completedCourse))
+      if (!isValidNumber(+completedCourse) && !isValidNumber(+certifiedCourse))
         formErrors["completed-course"] =
           "completed course needs to be more that 0";
-      if (!isValidNumber(+certifiedCourse))
+      if (!isValidNumber(+certifiedCourse) && !isValidNumber(+completedCourse))
         formErrors["course-certified"] =
           "certified Course course needs to be more that 0";
     }
@@ -115,6 +105,7 @@ export default function AvatarGenerator() {
         url: AvaterUrl(style, seed),
         minCertificates: certifiedCourse,
         minCompleted: completedCourse,
+        style,
       },
       reset: () => e.target.reset(),
     });
@@ -237,7 +228,11 @@ export default function AvatarGenerator() {
                   placeholder="eg.10"
                   onChange={(e) => {
                     const newErrors = { ...errors };
-                    if (newErrors["course-certified"]) {
+                    if (
+                      newErrors["course-certified"] &&
+                      e.target.value.trim().length >= 0
+                    ) {
+                      delete newErrors["completed-course"];
                       delete newErrors["course-certified"];
                       setErrors(newErrors);
                     }
@@ -255,8 +250,13 @@ export default function AvatarGenerator() {
                   label={"completed-course"}
                   onChange={(e) => {
                     const newErrors = { ...errors };
-                    if (newErrors["completed-course"]) {
+                    if (
+                      newErrors["completed-course"] &&
+                      e.target.value.trim().length >= 0
+                    ) {
                       delete newErrors["completed-course"];
+                      delete newErrors["course-certified"];
+
                       setErrors(newErrors);
                     }
                   }}

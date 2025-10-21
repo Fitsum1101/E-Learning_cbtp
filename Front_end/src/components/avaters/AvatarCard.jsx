@@ -25,7 +25,6 @@ const AvatarCard = ({ avatar }) => {
           </div>
         </div>
 
-        {/* Avatar Info */}
         <div className="mb-4 space-y-3">
           <div>
             <h3 className="font-semibold text-center text-foreground">
@@ -46,11 +45,11 @@ const AvatarCard = ({ avatar }) => {
             </p>
             {!avatar.isFree && (
               <div>
-                {avatar.minCompleted && (
+                {avatar.minCertificates && (
                   <p className="flex items-center text-xs font-medium ">
                     Certifcate needed to :
                     <span className="flex items-center justify-center w-5 h-5 ml-2 font-medium text-center bg-orange-500 rounded-full">
-                      {avatar.minCompleted}
+                      {avatar.minCertificates}
                     </span>
                   </p>
                 )}

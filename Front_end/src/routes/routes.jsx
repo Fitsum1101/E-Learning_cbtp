@@ -28,6 +28,8 @@ import ResourcesAddPage from "../pages/dashboard/admin/ResourcesAddPage";
 import AvatersPage from "../pages/dashboard/admin/Avaters";
 import EditAvaterPage from "../pages/dashboard/admin/EditAvater";
 import ViewAvater from "../pages/dashboard/admin/ViewAvater";
+import HomePage from "../pages/main/Home";
+import AboutPage from "../pages/main/About";
 
 export const router = createBrowserRouter([
   {
@@ -35,7 +37,11 @@ export const router = createBrowserRouter([
     path: "/",
     element: <MainLayout />,
     children: [
-      { index: true, element: <Courses /> },
+      { index: true, element: <HomePage /> },
+      {
+        path: "about",
+        element: <AboutPage />,
+      },
       {
         path: "course/:slug",
         children: [

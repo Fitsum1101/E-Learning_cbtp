@@ -120,3 +120,29 @@
   animation: popOut 0.25s ease-in forwards;
   transform-origin: top right;
 }
+
+.back-ground {
+  background: #fff;
+  background: linear-gradient(
+    130deg,
+    rgba(255, 255, 255, 1) 77%,
+    rgba(212, 212, 212, 1) 100%
+  );
+}
+
+.back-ground-2 {
+  background: #ffffff;
+  background: linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(232, 232, 232, 1) 1%
+  );
+}
+.about-section {
+  background: #dae0f2;
+  background: linear-gradient(
+    164deg,
+    rgba(218, 224, 242, 1) 0%,
+    rgba(255, 255, 255, 1) 100%
+  );
+}

@@ -6,12 +6,12 @@ import { Link } from "react-router-dom";
 
 const UpdateProifle = () => {
   return (
-    <div className="mt-10 bg-white rounded-xl p-8  shadow shadow-gray-200">
+    <div className="p-8 mt-10 bg-white shadow rounded-xl shadow-gray-200">
       <div>
         <div className="flex justify-between">
           <div className="flex gap-5">
             <div className="bg-[#F7FAFC] cursor-pointer w-[200px]  rounded-4xl  flex flex-col justify-center items-center flex-1/3 h-[23vh]">
-              <Profile size={80} seed={"Chase"} className=" p-1" />
+              <Profile size={80} seed={"Chase"} className="p-1 " />
             </div>
             <div className="flex flex-col gap-2">
               <h1 className="text-3xl font-semibold text-gray-700 capitalize">
@@ -35,9 +35,9 @@ const UpdateProifle = () => {
             </Button>
           </div>
         </div>
-        <hr className="text-gray-300 my-10 block" />
+        <hr className="block my-10 text-gray-300" />
         <div>
-          <h3 className="text-lg font-semibold py-5">Account information</h3>
+          <h3 className="py-5 text-lg font-semibold">Account information</h3>
           <div className="flex flex-col">
             <div className="flex gap-5 ">
               <Input
@@ -54,12 +54,12 @@ const UpdateProifle = () => {
                 name="last-name"
                 id="last-name"
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                className="block w-full p-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 placeholder="last name"
                 label={"last name"}
               />
             </div>
-            <p className="-mt-2 mb-5 text-gray-500 text-sm">
+            <p className="mb-5 -mt-2 text-sm text-gray-500">
               The name you enter here will appear on your certificates.
             </p>
             certificate
@@ -71,7 +71,7 @@ const UpdateProifle = () => {
                 name="username"
                 id="username"
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                className="block w-full p-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 placeholder="username"
                 label={"username"}
               />
@@ -80,7 +80,7 @@ const UpdateProifle = () => {
                 name="email"
                 id="email"
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                className="block w-full p-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 placeholder="email"
                 label={"email"}
               />

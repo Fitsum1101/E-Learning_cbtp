@@ -15,7 +15,8 @@
 
 import { Outlet, useNavigation } from "react-router-dom";
 import NavBar from "./NavBar";
-import { ClipLoader } from "react-spinners";
+
+import Footer from "./Footer";
 
 const MainLayout = () => {
   const navigation = useNavigation();
@@ -35,6 +36,7 @@ const MainLayout = () => {
       )}
 
       <Outlet />
+      <Footer />
     </div>
   );
 };

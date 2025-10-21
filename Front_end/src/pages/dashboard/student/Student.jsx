@@ -1,9 +1,22 @@
-import { Download, Search } from "lucide-react";
 import { StudentsList } from "../../../components/students/StudentList";
 import { StudentsStats } from "../../../components/students/StudentsStats";
+import { useQuery } from "@tanstack/react-query";
+import api from "../../../services/api";
+
+import { Download, Search } from "lucide-react";
 import { Button, Input } from "@mui/material";
 
 export default function StudentsPage() {
+  const { data } = useQuery({
+    queryKey: ["studentDatas"],
+    queryFn: () => {
+      return api.get("/api/student");
+    },
+    select: (response) => response.data,
+  });
+
+  console.log({ data });
+
   return (
     <>
       <div className="min-h-screen bg-background">

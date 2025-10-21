@@ -6,7 +6,7 @@ import {
   Award,
   Activity,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -15,7 +15,7 @@ import {
   LinearProgress,
 } from "@mui/material";
 import Button from "../../../components/common/Button/Button";
-import { LineChart } from "@mui/x-charts";
+// import { LineChart } from "@mui/x-charts";
 
 const progressData = [
   { month: "Jan", progress: 20 },
@@ -98,15 +98,19 @@ export default function StudentDetailPage({ studentId }) {
     overallProgress: 85,
   };
 
+  const navigate = useNavigate();
+
   return (
     <div>
       <div className="mb-6">
-        <Link to="students">
-          <Button variant="ghost" className="flex items-center gap-2 mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Students
-          </Button>
-        </Link>
+        <Button
+          onClick={() => navigate(-1)}
+          variant="ghost"
+          className="flex items-center gap-2 mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Students
+        </Button>
       </div>
 
       <Card className="mb-6">
@@ -176,58 +180,6 @@ export default function StudentDetailPage({ studentId }) {
             </div>
           </div>
         </CardContent>
-      </Card>
-      <Card className="mb-6">
-        <LineChart
-          dataset={data}
-          width={850}
-          height={420}
-          xAxis={[
-            {
-              dataKey: "month",
-              scaleType: "band",
-              label: "Month",
-            },
-          ]}
-          yAxis={[
-            {
-              label: "Average Progress (%)",
-              min: 0,
-              max: 100,
-            },
-          ]}
-          series={[
-            {
-              dataKey: "progress",
-              label: "Learning Progress",
-              color: theme.palette.primary.main,
-              showMark: true, // ✅ shows only the points
-              area: false,
-            },
-          ]}
-          // hide connecting line
-          sx={{
-            "& .MuiLineElement-root": {
-              strokeWidth: 0, // hides the line completely
-            },
-            "& .MuiMarkElement-root": {
-              r: 6, // size of points
-              strokeWidth: 2,
-              fill: theme.palette.primary.main,
-              stroke: theme.palette.background.paper,
-            },
-            "& .MuiChartsAxis-tickLabel": {
-              fill: theme.palette.text.primary,
-            },
-            "& .MuiChartsAxis-line": {
-              stroke: theme.palette.divider,
-            },
-            "& .MuiChartsLegend-label": {
-              fill: theme.palette.text.primary,
-            },
-          }}
-          grid={{ horizontal: true }}
-        />
       </Card>
       <div className="p-2 bg-blue-50 ">
         <Button className="bg-white border border-blue-200 rounded-md">
